@@ -9,8 +9,8 @@ use Test::More;
 use lib 't/lib';
 use Test::Ravada;
 
-use feature qw(signatures);
-no warnings "experimental::signatures";
+use if $] >= 5.020000, feature => qw(signatures);
+no if $] >= 5.020000, warnings => "experimental::signatures";
 
 
 use_ok('Ravada');
@@ -52,7 +52,7 @@ sub test_defaults {
 #    ok(!$user->can_hibernate_clone);
 #    ok(!$user->can_hibernate_all);
 #    ok(!$user->can_hibernate_clone_all);
-    
+
     ok(!$user->can_manage_users);
 
     for my $perm (user_admin->list_permissions) {
@@ -192,20 +192,20 @@ sub test_view_clones {
     my $usera = create_user("admin_rm$$","bar",'is admin');
     ok($usera->is_operator);
     ok($usera->is_admin);
-    
+
     my $domain = create_domain($vm_name, $usera);
     $domain->prepare_base($usera);
     ok($domain->is_base) or return;
-    
+
     my $clones;
     eval{ $clones = rvd_front->list_clones() };
     is($@,'');
     is(scalar @$clones,0, Dumper($clones)) or return;
-    
+
     my $clone = $domain->clone(user => $usera,name => new_domain_name());
     eval{ $clones = rvd_front->list_clones() };
     is(scalar @$clones, 1) or return;
-    
+
     $clone->prepare_base($usera);
     eval{ $clones = rvd_front->list_clones() };
     is(scalar @$clones, 0) or return;
@@ -375,11 +375,11 @@ sub test_remove_clone_all {
 
     eval { $clone->remove($user); };
     is($@,'');
-    
+
     my $domain2 = create_domain($vm_name, $usera);
     eval { $domain2->remove($user); };
     like($@,qr'.');
-    
+
     $clone2 = rvd_back->search_domain($clone_name);
     ok(!$clone2,"[$vm_name] domain $clone_name must be removed") or return;
 
@@ -675,7 +675,9 @@ sub test_create_domain2 {
     $usera->remove();
 }
 
-sub test_change_settings($vm_name) {
+sub test_change_settings {
+    my $vm_name = shift;
+
     my $vm = rvd_back->search_vm($vm_name);
 
     my $user = create_user("oper_cs$$","bar");

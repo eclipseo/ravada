@@ -25,10 +25,10 @@ my @USERS;
 sub test_user_fail {
     my $user_fail;
     eval { $user_fail = Ravada::Auth::LDAP->new(name => 'root',password => 'fail')};
-    
+
     ok(!$user_fail,"User should fail, got ".Dumper($user_fail));
 }
-    
+
 sub test_user{
     my $name = (shift or 'jimmy.mcnulty');
     my $with_posix_group = ( shift or 0);
@@ -36,7 +36,7 @@ sub test_user{
 
     if ( Ravada::Auth::LDAP::search_user($name) ) {
         diag("Removing $name");
-        Ravada::Auth::LDAP::remove_user($name)  
+        Ravada::Auth::LDAP::remove_user($name)
     }
 
     my $user = Ravada::Auth::LDAP::search_user($name);
@@ -78,29 +78,29 @@ sub test_user{
             "ref should be Ravada::Auth::LDAP , got ".ref($mcnulty_login));
     ok($mcnulty_login->ldap_entry,"Expecting User LDAP entry");
     # check for the user in the SQL db
-    # 
+    #
     $sth = connector->dbh->prepare("SELECT * FROM users WHERE name=?");
     $sth->execute($name);
     $row = $sth->fetchrow_hashref;
     $sth->finish;
-    ok($row->{name} && $row->{name} eq $name 
+    ok($row->{name} && $row->{name} eq $name
         && $row->{id},"I can't find $name in the users SQL table ".Dumper($row));
 
     my $mcnulty_sql = Ravada::Auth::SQL->new(name => $name);
     ok($mcnulty_sql,"I can't find mcnulty in the SQL db");
     ok($mcnulty_sql->{name} eq $name, "Expecting '$name', got $mcnulty_sql->{name}");
-    
+
     # login again to check it doesn't get added twice
- 
+
     my $mcnulty2;
     eval { $mcnulty2 = Ravada::Auth::LDAP->new(name => $name,password => $password) };
-    
+
     ok($mcnulty2,($@ or "ldap login failed for $name")) or return;
     $sth = connector->dbh->prepare("SELECT count(*) FROM users WHERE name=?");
     $sth->execute($name);
     my ($count) = $sth->fetchrow;
     $sth->finish;
-    
+
     ok($count == 1,"Found $count $name, expecting 1");
 
     my $auth_ok;
@@ -238,7 +238,11 @@ sub test_user_bind {
 
 }
 
-sub _init_config($file_config, $with_admin, $with_posix_group) {
+sub _init_config {
+    my $file_config = shift;
+    my $with_admin = shift;
+    my $with_posix_group = shift;
+
     if ( ! -e $file_config) {
         my $config = {
         ldap => {

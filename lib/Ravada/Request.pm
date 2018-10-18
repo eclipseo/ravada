@@ -859,23 +859,23 @@ sub set_driver {
 =head2 add_hardware
 
     Sets hardware to a VM
-    
+
     $domain->add_hardware(
         id_domain => $domain->id
         ,uid => $USER->id
         ,hardware => 'usb'
     );
-    
+
 =cut
 
 sub add_hardware {
     my $proto = shift;
     my $class = ref($proto) || $proto;
     my $args = _check_args('add_hardware', @_);
-    
+
     my $self = {};
     bless($self, $class);
-    
+
     return $self->_new_request(
         command => 'add_hardware'
         ,id_domain => $args->{id_domain}
@@ -886,24 +886,24 @@ sub add_hardware {
 =head2 remove_hardware
 
     Removes hardware to a VM
-    
+
     $domain->remove_hardware(
         id_domain => $domain->id
         ,uid => $USER->id
         ,name_hardware => 'usb'
     );
-    
+
 =cut
 
 sub remove_hardware {
     my $proto = shift;
     my $class = ref($proto) || $proto;
-    
+
     my $args = _check_args('remove_hardware', @_);
-    
+
     my $self = {};
     bless($self, $class);
-    
+
     return $self->_new_request(
         command => 'remove_hardware'
         ,id_domain => $args->{id_domain}
@@ -1052,9 +1052,9 @@ Changes the maximum memory of a virtual machine.
 sub change_max_memory {
     my $proto = shift;
     my $class = ref($proto) || $proto;
-    
+
     my $args = _check_args('change_max_memory', @_);
-    
+
     my $self = {};
     bless($self, $class);
     return _new_request($self
@@ -1078,9 +1078,9 @@ Changes the current memory used by a virtual machine.
 sub change_curr_memory {
     my $proto = shift;
     my $class = ref($proto) || $proto;
-    
+
     my $args = _check_args('change_max_memory', @_);
-    
+
     my $self = {};
     bless($self, $class);
     return _new_request($self

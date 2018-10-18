@@ -64,7 +64,7 @@ sub test_memory {
         ok($memory2 == $exp_memory,"[$vm_name] Expecting memory: '$exp_memory' "
                                         ." , got $memory2 ") ;
     }
-        
+
 }
 
 sub test_memory_first_time {
@@ -130,7 +130,7 @@ for my $vm_name (qw( Void KVM )) {
 
         test_memory($vm_name, $domain);
         test_memory_first_time($vm_name, $domain);
-  
+
         {
             $domain->shutdown(user => $USER, timeout => 1);
             my $exp_mem= int($max_mem / 2);
@@ -141,10 +141,10 @@ for my $vm_name (qw( Void KVM )) {
 
             ok($memory2 == $exp_mem,"[$vm_name] Expecting memory: '$exp_mem' "
                                         ." , got $memory2 ".Dumper($info2)) ;
-        
+
         }
 
-        
+
     };
 }
 

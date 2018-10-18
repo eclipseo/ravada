@@ -323,7 +323,11 @@ sub test_base_clone_pool {
     }
 }
 
-sub test_base_pool_2($vm, $pool, $domain) {
+sub test_base_pool_2 {
+    my $vm = shift;
+    my $pool = shift;
+    my $domain = shift;
+
     for my $name ( keys %$pool) {
         my $dir_pool = $pool->{$name};
 
@@ -344,7 +348,11 @@ sub test_base_pool_2($vm, $pool, $domain) {
     }
 }
 
-sub test_clone_pool_2($vm, $pool, $base) {
+sub test_clone_pool_2 {
+    my $vm = shift;
+    my $pool = shift;
+    my $base = shift;
+
     for my $name ( keys %$pool) {
         my $dir_pool = $pool->{$name};
 

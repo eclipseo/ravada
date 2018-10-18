@@ -40,7 +40,7 @@ sub remove {
     #die $err   if $?;
     #TODO look $?
     Ravada::VM->_domain_remove_db($name);
-  
+
     return;
 }
 
@@ -67,7 +67,7 @@ SPICE_USER=\${SPICE_USER:-"user"}
 SPICE_UID=\${SPICE_UID:-"1000"}
 SPICE_GID=\${SPICE_GID:-"1000"}
 SPICE_PASSWD=\${SPICE_PASSWD:-"password"}
-SPICE_KB=`echo "\$SPICE_LOCAL" | awk -F"_" '{print \$1}'` 
+SPICE_KB=`echo "\$SPICE_LOCAL" | awk -F"_" '{print \$1}'`
 SUDO=\${SUDO:-"NO"}
 locale-gen \$SPICE_LOCAL
 echo \$TIMEZONE > /etc/timezone
@@ -104,7 +104,7 @@ sub _resolution_desktop{
 [Desktop Entry]
 Type=Application
 Name=xrandr
-Exec=/usr/bin/xrandr -s SPICE_RES 
+Exec=/usr/bin/xrandr -s SPICE_RES
 NoDisplay=true
 EOF
 }
@@ -119,10 +119,10 @@ Option "SpiceIPV4Only" "true"
 EOF
 }
 
-#Introduce limits when create a new container 
-sub limits{ 
+#Introduce limits when create a new container
+sub limits{
     my $self = shift;
-    my $name = shift; 
+    my $name = shift;
     my $memory = shift;
     my $swap = shift;
     my $cpushares = shift;
@@ -142,7 +142,7 @@ sub _lxc_config{
 
     return <<EOF;
 
-# RAM, swap, cpushare and ioweight Limits 
+# RAM, swap, cpushare and ioweight Limits
 lxc.cgroup.memory.limit_in_bytes = $memory
 lxc.cgroup.memory.memsw.limit_in_bytes = $swap
 lxc.cgroup.cpu.shares = $cpushares

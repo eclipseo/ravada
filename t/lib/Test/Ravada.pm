@@ -9,8 +9,8 @@ use IPC::Run3 qw(run3);
 use  Test::More;
 use YAML qw(LoadFile DumpFile);
 
-no warnings "experimental::signatures";
-use feature qw(signatures);
+no if $] >= 5.020000, warnings => "experimental::signatures";
+use if $] >= 5.020000, feature => qw(signatures);
 
 use Ravada;
 use Ravada::Auth::SQL;
@@ -138,7 +138,8 @@ sub new_pool_name {
     return base_pool_name()."_".$CONT_POOL++;
 }
 
-sub rvd_back($config=undef) {
+sub rvd_back {
+    my $config = (shift or undef);
 
     return $RVD_BACK            if $RVD_BACK && !$config;
 
@@ -167,7 +168,8 @@ sub rvd_back($config=undef) {
     return $rvd;
 }
 
-sub rvd_front($config=undef) {
+sub rvd_front {
+    my $config = (shift or undef);
 
     return $RVD_FRONT if $RVD_FRONT;
 
@@ -178,7 +180,9 @@ sub rvd_front($config=undef) {
     return $RVD_FRONT;
 }
 
-sub init($config=undef, $create_user=1) {
+sub init {
+    my $config = (shift or undef);
+    my $create_user = (shift or 1);
 
     $create_user = 1 if !defined $create_user;
 
@@ -237,7 +241,7 @@ sub _remove_old_domains_vm {
 sub _remove_old_domains_kvm {
 
     my $vm;
-    
+
     eval {
         my $rvd_back = rvd_back();
         $vm = $rvd_back->search_vm('KVM');
@@ -249,9 +253,9 @@ sub _remove_old_domains_kvm {
     for my $domain ( $vm->vm->list_all_domains ) {
         next if $domain->get_name !~ /^$base_name/;
         my $domain_name = $domain->get_name;
-        eval { 
+        eval {
             $domain->shutdown();
-            sleep 1; 
+            sleep 1;
             eval { $domain->destroy() if $domain->is_active };
             warn $@ if $@;
         }
@@ -333,11 +337,13 @@ sub create_user {
     return $user;
 }
 
-sub create_ldap_user($name, $password) {
+sub create_ldap_user {
+    my $name = shift;
+    my $password = shift;
 
     if ( Ravada::Auth::LDAP::search_user($name) ) {
         diag("Removing $name");
-        Ravada::Auth::LDAP::remove_user($name)  
+        Ravada::Auth::LDAP::remove_user($name)
     }
 
     my $user = Ravada::Auth::LDAP::search_user($name);
@@ -601,7 +607,8 @@ sub find_ip_rule {
     return $found[0];
 }
 
-sub shutdown_domain_internal($domain) {
+sub shutdown_domain_internal {
+    my $domain = shift;
     if ($domain->type eq 'KVM') {
         $domain->domain->destroy();
     } elsif ($domain->type eq 'Void') {
@@ -611,7 +618,8 @@ sub shutdown_domain_internal($domain) {
     }
 }
 
-sub start_domain_internal($domain) {
+sub start_domain_internal {
+    my $domain = shift;
     if ($domain->type eq 'KVM') {
         $domain->domain->create();
     } elsif ($domain->type eq 'Void') {
@@ -647,7 +655,10 @@ sub _file_db {
     return $file_db;
 }
 
-sub _execute_sql($connector, $sql) {
+sub _execute_sql {
+    my $connector = shift;
+    my $sql = shift;
+
     eval { $connector->dbh->do($sql) };
     warn $sql   if $@;
     confess "FAILED SQL:\n$@" if $@;
@@ -670,7 +681,10 @@ sub _load_sql_file {
 
 }
 
-sub _create_db_tables($connector, $file_config = $DEFAULT_DB_CONFIG ) {
+sub _create_db_tables {
+    my $connector = shift;
+    my $file_config = (shift or $DEFAULT_DB_CONFIG);
+
     my $config = LoadFile($file_config);
     my $sql = $config->{sql};
 
@@ -685,7 +699,7 @@ sub connector {
     my $file_db = _file_db();
     my $connector = DBIx::Connector->new("DBI:SQLite:".$file_db
                 ,undef,undef
-                ,{sqlite_allow_multiple_statements=> 1 
+                ,{sqlite_allow_multiple_statements=> 1
                         , AutoCommit => 1
                         , RaiseError => 1
                         , PrintError => 0

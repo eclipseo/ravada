@@ -9,8 +9,8 @@ use YAML qw(DumpFile);
 use lib 't/lib';
 use Test::Ravada;
 
-no warnings "experimental::signatures";
-use feature qw(signatures);
+no if $] >= 5.020000, warnings => "experimental::signatures";
+use if $] >= 5.020000, feature => qw(signatures);
 
 use_ok('Ravada');
 
@@ -18,7 +18,9 @@ init( );
 
 #######################################################################
 
-sub test_autostart($vm_name) {
+sub test_autostart {
+    my $vm_name = shift;
+
     my $domain = create_domain($vm_name);
     is($domain->autostart,0,"[$vm_name] Expecting autostart=0 on domain ".$domain->name);
     is($domain->is_active,0);
@@ -36,7 +38,9 @@ sub test_autostart($vm_name) {
     $domain->remove(user_admin);
 }
 
-sub test_autostart_base($vm_name) {
+sub test_autostart_base {
+    my $vm_name = shift;
+
     my $domain = create_domain($vm_name);
     $domain->prepare_base(user_admin);
 
@@ -57,7 +61,9 @@ sub test_autostart_base($vm_name) {
     $domain->remove(user_admin);
 }
 
-sub test_autostart_prepare_base($vm_name) {
+sub test_autostart_prepare_base {
+    my $vm_name = shift;
+
     my $domain = create_domain($vm_name);
     $domain->autostart(1, user_admin);
     is($domain->autostart,1);
@@ -71,7 +77,9 @@ sub test_autostart_prepare_base($vm_name) {
     $domain->remove(user_admin);
 }
 
-sub test_autostart_denied($vm_name) {
+sub test_autostart_denied {
+    my $vm_name = shift;
+
     my $domain = create_domain($vm_name);
     my $jimmy= create_user("jimmy$domain",$$,0);
     eval { $domain->autostart(1, $jimmy) };
@@ -83,7 +91,9 @@ sub test_autostart_denied($vm_name) {
     $domain->remove(user_admin);
 }
 
-sub test_autostart_req($vm_name) {
+sub test_autostart_req {
+    my $vm_name = shift;
+
     my $domain = create_domain($vm_name);
     my $req = Ravada::Request->domain_autostart(
                uid => user_admin->id
@@ -102,7 +112,9 @@ sub test_autostart_req($vm_name) {
     $domain->remove(user_admin);
 }
 
-sub test_autostart_front($vm_name) {
+sub test_autostart_front {
+    my $vm_name = shift;
+
     my $domain = create_domain($vm_name);
     is($domain->autostart, 0);
 

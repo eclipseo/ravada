@@ -61,12 +61,12 @@ sub test_display {
 
     my ($domain, $user1, $user2) = @_;
     my $display;
-    
+
     eval { $display = $domain->display($user1) };
     ok($display, "User ".$user1->name." should be able to view ".$domain->name." $@ "
         .Dumper($user1));
     $display = undef;
-    
+
     eval { $display = $domain->display($user2) };
     ok(!$display, "User ".$user2->name." shouldn't be able to view ".$domain->name);
 }

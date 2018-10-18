@@ -21,8 +21,8 @@ use Net::LDAP::Entry;
 use Net::LDAP::Util qw(escape_filter_value);
 use Net::Domain qw(hostdomain);
 
-no warnings "experimental::signatures";
-use feature qw(signatures);
+no if $] >= 5.020000, warnings => "experimental::signatures";
+use if $] >= 5.020000, feature => qw(signatures);
 
 use Ravada::Auth::SQL;
 
@@ -296,7 +296,7 @@ sub add_to_group {
 
     my $user = $user[0];
 
-    my $group = search_group(name => $group_name, ldap => $LDAP_ADMIN)   
+    my $group = search_group(name => $group_name, ldap => $LDAP_ADMIN)
         or die "No such group $group_name";
 
     $group->add(uniqueMember=> $user->dn);
@@ -311,7 +311,9 @@ sub add_to_group {
 
 =cut
 
-sub login($self) {
+sub login {
+    my $self = shift;
+
     my $user_ok;
     my $allowed;
 
@@ -366,7 +368,9 @@ LDAP external authentication
 
 =cut
 
-sub ldap_entry($self) {
+sub ldap_entry {
+    my $self = shift;
+
     return $self->{_ldap_entry};
 }
 
@@ -437,7 +441,7 @@ sub _match_password {
 }
 
 sub _dc_base {
-    
+
     return $$CONFIG->{ldap}->{base}
         if $$CONFIG->{ldap}->{base};
 
@@ -463,12 +467,12 @@ sub _connect_ldap {
         $secure = 1 if $port == 636;
     }
     my $ldap;
-    
+
     for my $retry ( 1 .. 3 ) {
         if ($secure ) {
             $ldap = Net::LDAPS->new($host, port => $port, verify => 'none') 
         } else {
-            $ldap = Net::LDAP->new($host, port => $port, verify => 'none') 
+            $ldap = Net::LDAP->new($host, port => $port, verify => 'none')
         }
         last if $ldap;
         warn "WARNING: I can't connect to LDAP server at $host / $port : $@ [ retry $retry ]";
@@ -491,7 +495,7 @@ sub _init_ldap_admin {
 
     my ($dn, $pass);
     if ($$CONFIG->{ldap} ) {
-        ($dn, $pass) = ( $$CONFIG->{ldap}->{admin_user}->{dn} 
+        ($dn, $pass) = ( $$CONFIG->{ldap}->{admin_user}->{dn}
             , $$CONFIG->{ldap}->{admin_user}->{password});
     } else {
         confess "ERROR: Missing ldap section in config file ".Dumper($$CONFIG)."\n"

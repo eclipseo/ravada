@@ -64,7 +64,7 @@ sub test_req_start_domain {
     $USER->mark_all_messages_read();
     test_unread_messages($USER,0, "[$vm_name] start domain $name");
 
-    my $req = Ravada::Request->start_domain( 
+    my $req = Ravada::Request->start_domain(
         name => $name
         ,uid => $USER->id
         ,remote_ip => '127.0.0.1'
@@ -76,9 +76,9 @@ sub test_req_start_domain {
     wait_request($req);
 
     ok($req->status eq 'done'
-        ,"Status of request is ".$req->status." it should be done") 
+        ,"Status of request is ".$req->status." it should be done")
             or return ;
-    ok(!$req->error,"Error ".$req->error." creating domain ".$name) 
+    ok(!$req->error,"Error ".$req->error." creating domain ".$name)
             or return;
 
     my $n_expected = 1;
@@ -96,7 +96,7 @@ sub test_req_create_domain_iso {
     test_unread_messages($USER,0, "[$vm_name] create domain $name");
 
     my $req;
-    eval { $req = Ravada::Request->create_domain( 
+    eval { $req = Ravada::Request->create_domain(
         name => $name
         ,id_iso => search_id_iso('Alpine')
         ,@ARG_CREATE_DOM
@@ -107,8 +107,8 @@ sub test_req_create_domain_iso {
     ok($req->status);
     ok($req->args('id_owner'));
 
-    
-    ok(defined $req->args->{name} 
+
+    ok(defined $req->args->{name}
         && $req->args->{name} eq $name
             ,"Expecting args->{name} eq $name "
              ." ,got '".($req->args->{name} or '<UNDEF>')."'");
@@ -144,13 +144,13 @@ sub test_req_create_base {
 
     my $name = new_domain_name();
 
-    my $req = Ravada::Request->create_domain( 
+    my $req = Ravada::Request->create_domain(
         name => $name
         ,@ARG_CREATE_DOM
     );
     ok($req);
     ok($req->status);
-    ok(defined $req->args->{name} 
+    ok(defined $req->args->{name}
         && $req->args->{name} eq $name
             ,"Expecting args->{name} eq $name "
              ." ,got '".($req->args->{name} or '<UNDEF>')."'");
@@ -330,16 +330,16 @@ for my $vm_name ( qw(Void KVM)) {
         }
         diag($msg)      if !$vm;
         skip($msg,10)   if !$vm;
-    
+
         diag("Testing $vm_name requests with ".(ref $vm or '<UNDEF>'));
-    
+
         test_requests_by_domain($vm_name);
         my $domain_iso0 = test_req_create_domain_iso($vm_name);
         test_req_remove_domain_obj($vm, $domain_iso0)         if $domain_iso0;
-    
+
         my $domain_iso = test_req_create_domain_iso($vm_name);
         test_req_remove_domain_name($vm, $domain_iso->name)  if $domain_iso;
-    
+
         my $domain_base = test_req_create_base($vm);
         if ($domain_base) {
             $domain_base->is_public(1);

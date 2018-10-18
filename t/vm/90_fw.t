@@ -37,13 +37,13 @@ sub test_create_domain {
     };
 
     ok($domain,"No domain $name created with ".ref($vm)." ".($@ or '')) or exit;
-    ok($domain->name 
+    ok($domain->name
         && $domain->name eq $name,"Expecting domain name '$name' , got "
         .($domain->name or '<UNDEF>')
         ." for VM $vm_name"
     );
 
- 
+
     return $domain;
 }
 
@@ -60,7 +60,7 @@ sub test_fw_domain {
     my $display = $domain->display($USER);
     my ($local_port) = $display =~ m{\d+\.\d+\.\d+\.\d+\:(\d+)};
     ok(defined $local_port, "Expecting a port in display '$display'") or return;
-    
+
     ok($domain->is_active);
     test_chain($vm_name, $local_ip,$local_port, $remote_ip, 1);
 
@@ -84,7 +84,7 @@ sub test_fw_domain_stored {
         my $display = $domain->display($USER);
         ($local_port) = $display =~ m{\d+\.\d+\.\d+\.\d+\:(\d+)};
         ok(defined $local_port, "Expecting a port in display '$display'") or return;
-    
+
         ok($domain->is_active);
         test_chain($vm_name, $local_ip,$local_port, $remote_ip, 1);
     }
@@ -114,7 +114,7 @@ sub test_chain {
         warn join("\n",@$out);
         exit;
     };
-    ok($rule[0],"[$vm_name] Expecting rule for $remote_ip -> $local_ip: $local_port") 
+    ok($rule[0],"[$vm_name] Expecting rule for $remote_ip -> $local_ip: $local_port")
         if $expected_count;
 
     ok(!$rule[0],"[$vm_name] Expecting no rule for $remote_ip -> $local_ip: $local_port"

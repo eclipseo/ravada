@@ -20,13 +20,13 @@ Ravada::Auth::enable_LDAP(0);
 {
     my $user_fail;
     eval { $user_fail = Ravada::Auth::SQL->new(name => 'root',password => 'fail')};
-    
+
     ok(!$user_fail,"User should fail, got ".Dumper($user_fail));
 }
-    
+
 {
     my $user = Ravada::Auth::SQL->new(name => 'root',password => 'root');
-    
+
     ok($user);
     ok($user->id, "User ".$user->name." has no id");
     ok($user->is_admin,"User ".$user->name." should be admin ".Dumper($user->{_data}));
@@ -43,12 +43,12 @@ Ravada::Auth::enable_LDAP(0);
     ok($user3->is_admin,"User ".$user3->name." should be admin ".Dumper($user3->{_data}));
 
 }
-    
+
 Ravada::Auth::SQL::add_user(name => 'mcnulty', password => 'jameson');
-    
+
 {
     my $mcnulty= Ravada::Auth::SQL->new(name => 'mcnulty',password => 'jameson');
-    
+
     ok($mcnulty);
     ok(!$mcnulty->is_admin,"User ".$mcnulty->name." should not be admin "
             .Dumper($mcnulty->{_data}));
@@ -61,6 +61,6 @@ Ravada::Auth::SQL::add_user(name => 'mcnulty', password => 'jameson');
     ok(!$user3->is_admin,"User ".$user3->name." should not be admin ".Dumper($user3->{_data}));
 
 }
-    
-    
+
+
 done_testing();

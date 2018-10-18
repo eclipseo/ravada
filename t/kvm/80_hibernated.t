@@ -19,7 +19,10 @@ my $DIR_SAVE = "/var/lib/libvirt/qemu/save";
 
 ##############################################################################
 
-sub test_crashed($vm, $position) {
+sub test_crashed {
+    my $vm = shift;
+    my $position = shift;
+    
     my $domain = create_domain($vm->type);
     $domain->start(user_admin);
     is($domain->is_active,1);

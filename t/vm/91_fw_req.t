@@ -39,13 +39,13 @@ sub test_create_domain {
     };
 
     ok($domain,"No domain $name created with ".ref($vm)." ".($@ or '')) or exit;
-    ok($domain->name 
+    ok($domain->name
         && $domain->name eq $name,"Expecting domain name '$name' , got "
         .($domain->name or '<UNDEF>')
         ." for VM $vm_name"
     );
 
- 
+
     return $domain->name;
 }
 
@@ -68,7 +68,7 @@ sub test_fw_domain{
         $local_ip = $vm->ip;
 
         ok(defined $local_port, "Expecting a port in display '$display'") or return;
-    
+
         ok($domain->is_active);
         my $ipt = open_ipt();
         $ipt->flush_chain('filter', $CHAIN);
@@ -117,7 +117,7 @@ sub test_fw_domain_pause {
         $local_ip = $vm->ip;
 
         ok(defined $local_port, "Expecting a port in display '$display'") or return;
-    
+
         $domain->pause($USER);
         ok($domain->is_paused);
 
@@ -151,7 +151,7 @@ sub search_rule {
     my ($local_ip, $local_port, $remote_ip, $enabled) = @_;
     my $ipt = open_ipt();
 
-    my ($rule_num , $chain_rules) 
+    my ($rule_num , $chain_rules)
         = $ipt->find_ip_rule($remote_ip, $local_ip,'filter', $CHAIN, 'ACCEPT'
                               , {normalize => 1 , d_port => $local_port });
     return if ! $rule_num;
@@ -164,7 +164,7 @@ sub test_chain {
 
     my $rule_num = search_rule(@_);
 
-    ok($rule_num,"[$vm_name] Expecting rule for $remote_ip -> $local_ip: $local_port") 
+    ok($rule_num,"[$vm_name] Expecting rule for $remote_ip -> $local_ip: $local_port")
         if $enabled;
     ok(!$rule_num,"[$vm_name] Expecting no rule for $remote_ip "
                         ."-> $local_ip: $local_port"

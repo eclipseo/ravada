@@ -29,8 +29,8 @@ use Sys::Virt;
 use URI;
 use XML::LibXML;
 
-use feature qw(signatures);
-no warnings "experimental::signatures";
+use if $] >= 5.020000, feature => qw(signatures);
+no if $] >= 5.020000, warnings => "experimental::signatures";
 
 use Ravada::Domain::KVM;
 use Ravada::NetInterface::KVM;
@@ -200,7 +200,11 @@ list of all the volumes.
 
 =cut
 
-sub search_volume($self,$file,$refresh=0) {
+sub search_volume {
+    my $self = shift;
+    my $file = shift;
+    my $refresh = (shift or 0);
+
     confess "ERROR: undefined file" if !defined $file;
     return $self->search_volume_re(qr(^$file$),$refresh);
 }
@@ -245,7 +249,10 @@ list of all the matching volumes.
 
 =cut
 
-sub search_volume_re($self,$pattern,$refresh=0) {
+sub search_volume_re {
+    my $self = shift;
+    my $pattern = shift;
+    my $refresh = (shift or 0);
 
     confess "'$pattern' doesn't look like a regexp to me ".ref($pattern)
         if !ref($pattern) || ref($pattern) ne 'Regexp';
@@ -273,7 +280,8 @@ sub search_volume_re($self,$pattern,$refresh=0) {
     return @volume;
 }
 
-sub _refresh_storage_pools($self) {
+sub _refresh_storage_pools {
+    my $self = shift;
     for my $pool ($self->vm->list_storage_pools) {
         for (;;) {
             eval { $pool->refresh() };
@@ -290,7 +298,8 @@ Refreshes all the storage pools
 
 =cut
 
-sub refresh_storage($self) {
+sub refresh_storage {
+    my $self = shift;
     $self->_refresh_storage_pools();
 }
 
@@ -309,7 +318,10 @@ list of all the paths of all the matching volumes.
 =cut
 
 
-sub search_volume_path_re($self, $pattern) {
+sub search_volume_path_re {
+    my $self = shift;
+    my $pattern = shift;
+
     my @vol = $self->search_volume_re($pattern);
 
     return if !wantarray && !scalar @vol;
@@ -339,7 +351,10 @@ sub dir_img {
     return $dir;
 }
 
-sub _storage_path($self, $storage) {
+sub _storage_path {
+    my $self = shift;
+    my $storage = shift;
+
     if (!ref($storage)) {
         $storage = $self->vm->get_storage_pool_by_name($storage);
     }
@@ -401,7 +416,7 @@ Creates a domain.
 
 Creates a domain and removes the CPU defined in the XML template:
 
-    $dom = $vm->create_domain(        name => $name 
+    $dom = $vm->create_domain(        name => $name
                                   , id_iso => $id_iso
                               , remove_cpu => 1);
 
@@ -437,7 +452,10 @@ Returns true or false if domain exists.
 
 =cut
 
-sub search_domain($self, $name, $force=undef) {
+sub search_domain {
+    my $self = shift;
+    my $name = shift;
+    my $force = (shift or undef);
 
     $self->connect();
 
@@ -481,7 +499,10 @@ Returns a list of the created domains
 
 =cut
 
-sub list_domains($self, %args) {
+sub list_domains {
+    my $self = shift;
+    my %args = @_;
+
 
     my $active = delete $args{active} or 0;
 
@@ -613,7 +634,7 @@ sub _domain_create_from_iso {
 
     die "ERROR: Empty field 'xml_volume' in iso_image ".Dumper($iso)
         if !$iso->{xml_volume};
-        
+
     my $device_cdrom;
 
     confess "Template ".$iso->{name}." has no URL, iso_file argument required."
@@ -627,14 +648,14 @@ sub _domain_create_from_iso {
     else {
       $device_cdrom = $self->_iso_name($iso, $args{request});
     }
-    
+
     #if ((not exists $args{iso_file}) || ((exists $args{iso_file}) && ($args{iso_file} eq "<NONE>"))) {
     #    $device_cdrom = $self->_iso_name($iso, $args{request});
     #}
     #else {
     #    $device_cdrom = $args{iso_file};
     #}
-    
+
     my $disk_size;
     $disk_size = $args{disk} if $args{disk};
 
@@ -765,7 +786,10 @@ sub _create_disk_qcow2 {
 
 # this may become official API eventually
 
-sub _clone_disk($self, $file_base, $file_out) {
+sub _clone_disk {
+    my $self = shift;
+    my $file_base = shift;
+    my $file_out = shift;
 
         my @cmd = ('qemu-img','create'
                 ,'-f','qcow2'
@@ -905,7 +929,11 @@ sub _fix_pci_slots {
 
 }
 
-sub _iso_name($self, $iso, $req, $verbose=1) {
+sub _iso_name {
+    my $self = shift;
+    my $iso = shift;
+    my $req = shift;
+    my $verbose = (shift or 1);
 
     my $iso_name;
     if ($iso->{rename_file}) {
@@ -964,7 +992,9 @@ sub _iso_name($self, $iso, $req, $verbose=1) {
     return $device;
 }
 
-sub _fill_url($iso) {
+sub _fill_url {
+    my $iso = shift;
+
     return if $iso->{url} =~ m{.*/[^/]+\.[^/]+$};
     if ($iso->{file_re}) {
         $iso->{url} .= "/" if $iso->{url} !~ m{/$};
@@ -993,7 +1023,10 @@ sub _check_md5 {
     return 0;
 }
 
-sub _check_sha256($file,$sha) {
+sub _check_sha256 {
+    my $file = shift;
+    my $sha = shift;
+
     return if !$sha;
     confess "Wrong SHA256 '$sha'" if $sha !~ /[a-f0-9]{9}/;
 
@@ -1014,7 +1047,11 @@ sub _check_sha256($file,$sha) {
 }
 
 
-sub _check_signature($file, $type, $expected) {
+sub _check_signature {
+    my $file = shift;
+    my $type = shift;
+    my $expected = shift;
+
     confess "ERROR: Wrong signature '$expected'"
         if $expected !~ /^[0-9a-f]{7}/;
     return _check_md5($file,$expected) if $type =~ /md5/i;
@@ -1022,7 +1059,11 @@ sub _check_signature($file, $type, $expected) {
     die "Unknown signature type $type";
 }
 
-sub _download_file_external($self, $url, $device, $verbose=1) {
+sub _download_file_external {
+    my $url = shift;
+    my $device = shift;
+    my $verbose = (shift or 1);
+
     $url .= "/" if $url !~ m{/$} && $url !~ m{.*/([^/]+\.[^/]+)$};
     if ( $url =~ m{/$} ) {
         my ($filename) = $device =~ m{.*/(.*)};
@@ -1087,7 +1128,10 @@ sub _search_iso {
     return $row;
 }
 
-sub _download($self, $url) {
+sub _download {
+    my $self = shift;
+    my $url = shift;
+
     $url =~ s{(http://.*)//(.*)}{$1/$2};
     if ($url =~ m{[^*]}) {
         my @found = $self->_search_url_file($url);
@@ -1112,7 +1156,10 @@ sub _download($self, $url) {
     return $self->_cache_store($url,$res->body);
 }
 
-sub _match_url($self,$url) {
+sub _match_url {
+    my $self = shift;
+    my $url = shift;
+
     return $url if $url !~ m{\*};
 
     my ($url1, $match,$url2) = $url =~ m{(.*/)([^/]*\*[^/]*)/?(.*)};
@@ -1134,7 +1181,10 @@ sub _match_url($self,$url) {
     return @found;
 }
 
-sub _cache_get($self, $url) {
+sub _cache_get {
+    my $self = shift;
+    my $url = shift;
+
     my $file = _cache_filename($url);
 
     my @stat = stat($file)  or return;
@@ -1156,7 +1206,9 @@ sub _cache_store {
 
 }
 
-sub _cache_filename($url) {
+sub _cache_filename {
+    my $url = shift;
+
     confess "Undefined url" if !$url;
 
     my $file = $url;
@@ -1219,7 +1271,10 @@ sub _fetch_filename {
 #    $row->{url} .= $file;
 }
 
-sub _search_url_file($self, $url_re, $file_re=undef) {
+sub _search_url_file {
+    my $self = shift;
+    my $url_re = shift;
+    my $file_re = (shift or undef);
 
     if (!$file_re) {
         my $old_url_re = $url_re;
@@ -1236,7 +1291,8 @@ sub _search_url_file($self, $url_re, $file_re=undef) {
     }
     return (sort @found);
 }
-sub _web_user_agent($self) {
+sub _web_user_agent {
+    my $self = shift;
 
     my $ua = Mojo::UserAgent->new();
 
@@ -1246,7 +1302,10 @@ sub _web_user_agent($self) {
     return $ua;
 }
 
-sub _match_file($self, $url, $file_re) {
+sub _match_file {
+    my $self = shift;
+    my $url = shift;
+    my $file_re = shift;
 
     $url .= '/' if $url !~ m{/$};
 
@@ -1272,7 +1331,11 @@ sub _match_file($self, $url, $file_re) {
     return @found;
 }
 
-sub _fetch_this($self, $row, $type, $file = $row->{filename}){
+sub _fetch_this {
+    my $self = shift;
+    my $row = shift;
+    my $type = shift;
+    my $file = (shift or $row->{filename});
 
     confess "Error: missing file or filename ".Dumper($row) if !$file;
 
@@ -1306,7 +1369,10 @@ sub _fetch_this($self, $row, $type, $file = $row->{filename}){
         .$content;
 }
 
-sub _fetch_md5($self,$row) {
+sub _fetch_md5 {
+    my $self = shift;
+    my $row = shift;
+
     my $signature = $self->_fetch_this($row,'md5');
     die "ERROR: Wrong signature '$signature'"
          if $signature !~ /^[0-9a-f]{9}/;
@@ -1314,7 +1380,10 @@ sub _fetch_md5($self,$row) {
 }
 
 
-sub _fetch_sha256($self,$row) {
+sub _fetch_sha256 {
+    my $self = shift;
+    my $row = shift;
+
     my $signature = $self->_fetch_this($row,'sha256');
     confess "ERROR: Wrong signature '$signature'"
          if $signature !~ /^[0-9a-f]{9}/;
@@ -1405,11 +1474,14 @@ sub _xml_modify_uuid {
     for my $dom ($self->vm->list_all_domains) {
         push @known_uuids,($dom->get_uuid_string);
     }
-    my $new_uuid = _unique_uuid($uuid,@known_uuids);
+    my $new_uuid = $self->_unique_uuid($uuid,@known_uuids);
     $uuid->setData($new_uuid);
 }
 
-sub _unique_uuid($self, $uuid='1805fb4f-ca45-aaaa-bbbb-94124e760434',@) {
+sub _unique_uuid {
+    my $self = shift;
+    my $uuid = (shift or '1805fb4f-ca45-aaaa-bbbb-94124e760434');
+
     my @uuids = @_;
     if (!scalar @uuids) {
         for my $dom ($self->vm->list_all_domains) {
@@ -1521,7 +1593,7 @@ sub _xml_add_usb_redirect {
         ,type => 'spicevmc'
     );
     $items = $items - 1 if $dev;
-    
+
     for (my $var = 0; $var < $items; $var++) {
         $dev = $devices->addNewChild(undef,'redirdev');
         $dev->setAttribute( bus => 'usb');
@@ -1711,25 +1783,25 @@ sub _xml_add_usb_uhci3 {
 sub _xml_add_guest_agent {
     my $self = shift;
     my $doc = shift;
-    
+
     my ($devices) = $doc->findnodes('/domain/devices');
-    
+
     return if _search_xml(
                             xml => $devices
                             ,name => 'channel'
                             ,type => 'unix'
     );
-    
+
     my $channel = $devices->addNewChild(undef,"channel");
     $channel->setAttribute(type => 'unix');
-    
+
     my $source = $channel->addNewChild(undef,'source');
     $source->setAttribute(mode => 'bind');
-    
+
     my $target = $channel->addNewChild(undef,'target');
     $target->setAttribute(type => 'virtio');
     $target->setAttribute(name => 'org.qemu.guest_agent.0');
-    
+
 }
 
 sub _xml_remove_cdrom {
@@ -1973,7 +2045,10 @@ Imports a KVM domain in Ravada
 
 =cut
 
-sub import_domain($self, $name, $user) {
+sub import_domain {
+    my $self = shift;
+    my $name = shift;
+    my $user = shift;
 
     my $domain_kvm = $self->vm->get_domain_by_name($name);
     confess "ERROR: unknown domain $name in KVM" if !$domain_kvm;
@@ -1987,31 +2062,36 @@ sub import_domain($self, $name, $user) {
     return $domain;
 }
 
-sub ping($self) {
+sub ping {
+    my $self = shift;
     return 0 if !$self->vm;
     eval { $self->vm->list_defined_networks };
     return 1 if !$@;
     return 0;
 }
 
-sub is_active($self) {
+sub is_active {
+    my $self = shift;
     return 1 if $self->vm;
     return 0;
 }
 
-sub free_memory($self) {
+sub free_memory {
+    my $self = shift;
     return $self->_free_memory_available();
 }
 
 # TODO: enable this check from free memory with a config flag
 #   though I don't think it would be suitable to use
 #   Insights welcome
-sub _free_memory_overcommit($self) {
+sub _free_memory_overcommit {
+    my $self = shift;
     my $info = $self->vm->get_node_memory_stats();
     return ($info->{free} + $info->{buffers} + $info->{cached});
 }
 
-sub _free_memory_available($self) {
+sub _free_memory_available {
+    my $self = shift;
     my $info = $self->vm->get_node_memory_stats();
     my $used = 0;
     for my $domain ( $self->list_domains(active => 1) ) {

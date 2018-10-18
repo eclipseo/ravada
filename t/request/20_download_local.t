@@ -45,7 +45,7 @@ sub test_download {
     eval { $iso2 = $vm->_search_iso($id_iso) };
     is($@,'');
     ok($iso2, "Expecting a iso for id = $id_iso , got ".($iso2 or '<UNDEF>'));
-    
+
     my $device;
     eval { $device = $vm->_iso_name($iso2, undef, 0) };
     is($@,'');
@@ -96,7 +96,7 @@ sub search_id_isos {
 sub httpd_localhost {
     my $ua  = Mojo::UserAgent->new;
     my $res;
-    eval {  
+    eval {
        $res = $ua->get('http://localhost/iso/')->res;
     };
     diag(($res->code or '')." ".($res->message or '')." ".($@ or ''));

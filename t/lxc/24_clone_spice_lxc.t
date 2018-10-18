@@ -33,14 +33,14 @@ sub test_remove_domain {
     $domain->remove() if $domain;
     diag ("$@");
     ok(!$@ , "Error removing domain $name : $@") or exit;
-  
+
     $domain = $RAVADA->search_domain($name);
     ok(!$domain, "I can't remove old domain $name") or exit;
 }
 
 sub test_new_domain {
     my $active = shift;
-    
+
     my ($name) = $0 =~ m{.*/(.*)\.t};
     $name .= "_".$CONT++;
     diag ("Test remove domain");
@@ -64,7 +64,7 @@ sub test_new_domain {
 }
 
 sub test_domain_create_from_base {
-    my $name = shift; 
+    my $name = shift;
     diag("Test domain created from base: $name");
     #my $newdomain = $vm_lxc->_domain_create_from_base($name);
     my $newname = $name . "_cow";
@@ -93,7 +93,7 @@ sub test_domain{
     $active = 1 if !defined $active;
 
     my $n_domains = scalar $RAVADA->list_domains();
-    
+
     diag("Test new domain n_domains= $n_domains");
     my $domain = test_new_domain($active);
 }

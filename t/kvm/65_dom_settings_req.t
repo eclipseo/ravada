@@ -68,7 +68,7 @@ sub test_drivers_id {
     for my $option (@options) {
         _domain_shutdown($domain);
 
-        my $req = Ravada::Request->set_driver( 
+        my $req = Ravada::Request->set_driver(
             id_domain => $domain->id
             , uid => $USER->id
             , id_option => $option->{id}
@@ -138,7 +138,7 @@ sub test_needs_shutdown {
 
     is($domain->is_active,1);
 
-    my $req = Ravada::Request->set_driver( 
+    my $req = Ravada::Request->set_driver(
             id_domain => $domain->id
             , uid => $USER->id
             , id_option => $option->{id}

@@ -46,13 +46,13 @@ sub test_create_domain {
 
     my $vm = $RVD_BACK->search_vm($vm_name);
     ok($vm,"Expecting VM $vm , got '".ref($vm)) or return;
-    
+
     my $domain_b = $vm->create_domain(
         name => $name
         ,active => 0
         ,create_args($vm_name)
     );
-    
+
     ok($domain_b);
 
     my $domain_f = $RVD_FRONT->search_domain($name);
@@ -66,13 +66,13 @@ sub test_vm_controllers_fe {
 	my $name = shift;
 	my $domain_f = $RVD_FRONT->search_domain($name);
 	isa_ok($domain_f, "Ravada::Front::Domain::$vm_name");
-	
+
 	my @usbs = $domain_f->get_controller('usb');
 	ok(scalar @usbs > 0, "Got USB: @usbs");
-	
+
 	#my $nusb = $domain_f->set_controller('usb' , 'spicevmc');
 	#ok($nusb, "Added usb: $nusb");
-	
+
 	#eval {$domain_f->remove_controller('usb')};
 	#ok(!$@, $@);
 }

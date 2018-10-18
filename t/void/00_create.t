@@ -13,7 +13,9 @@ use Test::Ravada;
 
 init();
 
-sub test_memory_empty($vm) {
+sub test_memory_empty {
+    my $vm = shift;
+
     my $domain = create_domain($vm->type);
     ok($domain->get_info->{memory});
 

@@ -52,8 +52,8 @@ sub xml_source {
 
 sub source {
     my $self = shift;
-    return { 
-          dev => $self->interface->name 
+    return {
+          dev => $self->interface->name
         ,mode => $self->mode
     };
 }

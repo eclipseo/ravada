@@ -58,7 +58,7 @@ sub BUILD {
     $self->set_memory($args->{memory}) if $args->{memory};
 }
 
-sub name { 
+sub name {
     my $self = shift;
     return $self->domain;
 };
@@ -143,7 +143,7 @@ sub _value{
 
     my $data = {} ;
     $data = LoadFile($disk) if -e $disk;
-    
+
     return $data->{$var};
 
 }
@@ -413,7 +413,7 @@ sub set_max_memory {
 sub set_memory {
     my $self = shift;
     my $value = shift;
-    
+
     $self->_set_info(memory => $value );
 }
 

@@ -65,7 +65,7 @@ sub test_new_domain_from_iso {
                                         , id_iso => search_id_iso('alpine')
                                         ,vm => $BACKEND
                                         ,id_owner => $USER->id
-            ) 
+            )
     };
     ok(!$@,"Domain $name not created: $@");
 
@@ -108,7 +108,7 @@ sub test_usb {
 
         for my $dev (@usb) {
             next if $dev->getAttribute('type') ne 'usb';
-            next if ! $dev->getAttribute('model') 
+            next if ! $dev->getAttribute('model')
                     || $dev->getAttribute('model') ne $model;
 
             push @usb_found,($dev);

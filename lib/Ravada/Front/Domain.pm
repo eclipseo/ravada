@@ -17,8 +17,8 @@ use Moose;
 use Ravada::Front::Domain::KVM;
 use Ravada::Front::Domain::Void;
 
-no warnings "experimental::signatures";
-use feature qw(signatures);
+no if $] >= 5.020000, warnings => "experimental::signatures";
+use if $] >= 5.020000, feature => qw(signatures);
 
 with 'Ravada::Domain';
 
@@ -34,7 +34,10 @@ our $CONNECTOR = \$Ravada::Front::CONNECTOR;
 #
 ###########################################################################
 
-sub BUILD($self, $arg) {
+sub BUILD {
+    my $self = shift;
+    my $arg = shift;
+
     my $id = $arg->{id};
     my $name = $arg->{name};
 
@@ -48,7 +51,10 @@ sub BUILD($self, $arg) {
 #        if $self->is_volatile && ! $self->is_active;
 }
 
-sub open($self, $id) {
+sub open {
+    my $self = shift;
+    my $id = shift;
+
     my $domain = Ravada::Front::Domain->new( id => $id );
     if ($domain->type eq 'KVM') {
         $domain = Ravada::Front::Domain::KVM->new( id => $id );
@@ -60,20 +66,29 @@ sub open($self, $id) {
     return $domain;
 }
 
-sub autostart($self )    { return $self->_data('autostart') }
+sub autostart {
+    my $self = shift;
+
+    return $self->_data('autostart')
+}
 sub _do_force_shutdown  { confess "TODO" }
 sub add_volume          { confess "TODO" }
 sub clean_swap_volumes  { confess "TODO" }
 sub disk_device         { confess "TODO" }
 sub disk_size           { confess "TODO" }
 
-sub display($self, $user) {
+sub display {
+    my $self = shift;
+    my $user = shift;
+
     return $self->_data('display');
 }
 
 sub force_shutdown      { confess "TODO" }
 
-sub get_info($self) {
+sub get_info {
+    my $self = shift;
+
      my $info = $self->_data('info');
      return {} if !$info;
      return decode_json($info);
@@ -81,21 +96,35 @@ sub get_info($self) {
 sub hybernate           { confess "TODO" }
 sub hibernate           { confess "TODO" }
 
-sub internal_id($self) { return $self->_data('internal_id')}
+sub internal_id {
+    my $self = shift;
 
-sub is_active($self) {
+    return $self->_data('internal_id')
+}
+
+sub is_active {
+    my $self = shift;
+
     return 1 if $self->_data('status') eq 'active';
     return 0;
 }
 
-sub is_volatile_clones($self) { return $self->_data('volatile_clones')}
+sub is_volatile_clones {
+    my $self = shift;
 
-sub is_hibernated($self) {
+    return $self->_data('volatile_clones')
+}
+
+sub is_hibernated {
+    my $self = shift;
+
     return 1 if $self->_data('status') eq 'hibernated';
     return 0;
 }
 
-sub is_paused($self) {
+sub is_paused {
+    my $self = shift;
+
     return 1 if $self->_data('status') eq 'paused';
     return 0;
 }
@@ -103,9 +132,11 @@ sub is_paused($self) {
 sub is_removed          { return 0 }
 sub list_volumes        { confess "TODO" }
 
-sub name($self) {
+sub name {
+    my $self = shift;
+
     return $self->{_data}->{name}   if exists $self->{_data} && $self->{_data}->{name};
-    return $self->_data('name') 
+    return $self->_data('name')
 }
 
 sub pause               { confess "TODO" }

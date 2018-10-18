@@ -20,7 +20,7 @@ sub test_remove_domain {
     my $vm_name = shift;
     my $name = shift;
 
-    my $vm = rvd_back->search_vm($vm_name) 
+    my $vm = rvd_back->search_vm($vm_name)
         or confess "I can't find vm $vm_name";
 
     diag("[$vm_name] removing domain $name");
@@ -31,7 +31,7 @@ sub test_remove_domain {
     if ($domain) {
         diag("Removing domain $name");
         my @disks = $domain->list_disks();
-        eval { 
+        eval {
             $domain->remove(user_admin->id);
         };
         ok(!$@ , "Error removing domain $name ".ref($domain).": $@") or exit;

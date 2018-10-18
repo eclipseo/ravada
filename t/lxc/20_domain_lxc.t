@@ -33,7 +33,7 @@ sub test_remove_domain {
     $domain->remove() if $domain;
     diag ("$@");
     ok(!$@ , "Error removing domain $name : $@") or exit;
-  
+
     $domain = $RAVADA->search_domain($name,1);
     ok(!$domain, "I can't remove old domain $name") or exit;
 
@@ -90,7 +90,7 @@ sub test_domain_from_base {
 
 sub test_new_domain {
     my $active = shift;
-    
+
     my $name = _new_name();
     diag ("Test remove domain");
     test_remove_domain($name);
@@ -109,7 +109,7 @@ sub test_new_domain {
     #my $row =  search_domain_db($domain->name);
     #ok($row->{name} && $row->{name} eq $domain->name,"I can't find the domain at the db");
     my $pq = $domain->id;
-    
+
     #my $domain2 = $vm_lxc->search_domain_by_id($domain->id);
     #ok($domain2->id eq $domain->id,"Expecting id = ".$domain->id." , got ".$domain2->id);
     #ok($domain2->name eq $domain->name,"Expecting name = ".$domain->name." , got "

@@ -98,7 +98,7 @@ sub test_req_create_domain{
                     , vm => $vm_name
                     , arg_create_dom($vm_name)
         );
-   
+
     }
     ok($req,"Expecting request to create_domain");
 
@@ -130,7 +130,7 @@ sub test_req_create_fail {
                     , vm => $vm_name
                     , arg_create_dom($vm_name)
         );
-   
+
         ok($req,"Expecting request to create_domain");
     }
     rvd_back->process_requests();
@@ -191,7 +191,7 @@ sub test_disk_kvm {
     close $volinfo;
 
     my $doc = XML::LibXML->load_xml(string => $xml);
-    
+
     my ($size) = $doc->findnodes('/volume/capacity/text()')->[0]->getData();
     ok($size == $size_exp, "Expecting size '$size_exp' , got '$size'");
 

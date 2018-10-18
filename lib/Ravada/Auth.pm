@@ -24,7 +24,7 @@ sub init {
     if ($config->{ldap}) {
         eval {
             require Ravada::Auth::LDAP;
-            Ravada::Auth::LDAP::init($config); 
+            Ravada::Auth::LDAP::init($config);
             $LDAP_OK = 1;
         };
         warn $@ if $@;

@@ -20,8 +20,8 @@ use IPC::Run3 qw(run3);
 use Time::Piece;
 use IPTables::ChainMgr;
 
-no warnings "experimental::signatures";
-use feature qw(signatures);
+no if $] >= 5.020000, warnings => "experimental::signatures";
+use if $] >= 5.020000, feature => qw(signatures);
 
 use Ravada::Domain::Driver;
 use Ravada::Utils;
@@ -284,7 +284,10 @@ sub _allow_manage {
 
 }
 
-sub _allow_remove($self, $user) {
+sub _allow_remove {
+    my $self = shift;
+    my $user = shift;
+
 
     confess "ERROR: Undefined user" if !defined $user;
 
@@ -335,7 +338,10 @@ sub _around_add_volume {
     return $self->$orig(%args);
 }
 
-sub _pre_prepare_base($self, $user, $request = undef ) {
+sub _pre_prepare_base {
+    my $self = shift;
+    my $user = shift;
+    my $request = (shift or undef);
 
     $self->_allowed($user);
 
@@ -347,7 +353,7 @@ sub _pre_prepare_base($self, $user, $request = undef ) {
 
 
     # TODO: if disk is not base and disks have not been modified, do not generate them
-    # again, just re-attach them 
+    # again, just re-attach them
 #    $self->_check_disk_modified(
     die "ERROR: domain ".$self->name." is already a base" if $self->is_base();
     $self->_check_has_clones();
@@ -389,7 +395,11 @@ sub _post_prepare_base {
     $self->autostart(0,$user);
 };
 
-sub _around_autostart($orig, $self, @arg) {
+sub _around_autostart {
+    my $orig = shift;
+    my $self = shift;
+    my @arg = @_;
+
     my ($value, $user) = @arg;
     $self->_allowed($user) if defined $value;
     confess "ERROR: Autostart can't be activated on base ".$self->name
@@ -430,7 +440,9 @@ sub _check_free_vm_memory {
     die $msg;
 }
 
-sub _check_cpu_usage($self, $request=undef){
+sub _check_cpu_usage {
+    my $self = shift;
+    my $request = (shift or undef);
 
     return if ref($self) =~ /Void/i;
     delete $self->_vm->{_data};
@@ -438,7 +450,7 @@ sub _check_cpu_usage($self, $request=undef){
         chomp(my $cpu_count = `grep -c -P '^processor\\s+:' /proc/cpuinfo`);
         die "Error: Too many active domains." if (scalar $self->_vm->vm->list_domains() >= $self->_vm->active_limit);
     }
-    
+
     my @cpu;
     my $msg;
     for ( 1 .. 10 ) {
@@ -459,7 +471,9 @@ sub _check_cpu_usage($self, $request=undef){
     die "$msg\n";
 }
 
-sub _gb($mem=0) {
+sub _gb {
+    my $mem = (shift or 0);
+
     my $gb = $mem / 1024 / 1024 ;
 
     $gb =~ s/(\d+\.\d).*/$1/;
@@ -517,14 +531,21 @@ sub _allowed {
 
 }
 
-sub _around_display($orig,$self,$user) {
+sub _around_display {
+    my $orig = shift;
+    my $self = shift;
+    my $user = shift;
+
     $self->_allowed($user);
     my $display = $self->$orig($user);
     $self->_data(display => $display)   if !$self->readonly;
     return $display;
 }
 
-sub _around_get_info($orig, $self) {
+sub _around_get_info {
+    my $orig = shift;
+    my $self= shift;
+
     my $info = $self->$orig();
     if (ref($self) =~ /^Ravada::Domain/ && $self->is_known()) {
         $self->_data(info => encode_json($info));
@@ -532,7 +553,11 @@ sub _around_get_info($orig, $self) {
     return $info;
 }
 
-sub _around_set_mem($orig, $self, $value) {
+sub _around_set_mem {
+    my $orig = shift;
+    my $self = shift;
+    my $value = shift;
+
     my $ret = $self->$orig($value);
     if ($self->is_known) {
         my $info;
@@ -558,9 +583,11 @@ Returns the id of  the domain
     my $id = $domain->id();
 =cut
 
-sub id($self) {
+sub id {
+    my $self = shift;
+
     return $self->{_id} if exists $self->{_id};
-    my $id = $_[0]->_data('id');
+    my $id = $self->_data('id');
     $self->{_id} = $id;
     return $id;
 }
@@ -568,7 +595,11 @@ sub id($self) {
 
 ##################################################################################
 
-sub _data($self, $field, $value=undef, $table='domains') {
+sub _data {
+    my $self = shift;
+    my $field = shift;
+    my $value = (shift or undef);
+    my $table = (shift or 'domains');
 
     _init_connector();
 
@@ -610,7 +641,7 @@ sub _data($self, $field, $value=undef, $table='domains') {
 
     $self->{$data} = $self->_select_domain_db( _table => $table, @field_select );
 
-    confess "No DB info for domain @field_select in $table ".$self->name 
+    confess "No DB info for domain @field_select in $table ".$self->name
         if ! exists $self->{$data};
     confess "No field $field in $data ".Dumper(\@field_select)."\n".Dumper($self->{$data})
         if !exists $self->{$data}->{$field};
@@ -618,7 +649,11 @@ sub _data($self, $field, $value=undef, $table='domains') {
     return $self->{$data}->{$field};
 }
 
-sub _data_extra($self, $field, $value=undef) {
+sub _data_extra {
+    my $self = shift;
+    my $field = shift;
+    my $value = (shift or undef);
+
     $self->_insert_db_extra()   if !$self->is_known_extra();
     return $self->_data($field, $value, "domains_".lc($self->type));
 }
@@ -633,7 +668,10 @@ Returns: Domain object read only
 
 =cut
 
-sub open($class, @args) {
+sub open {
+    my $class = shift;
+    my @args = @_;
+
     my ($id) = @args;
     my $readonly = 0;
     my $id_vm;
@@ -811,12 +849,18 @@ Returns a file with the display information. Defaults to spice.
 
 =cut
 
-sub display_file($self,$user) {
+sub display_file {
+    my $self = shift;
+    my $user = shift;
+
     return $self->_display_file_spice($user);
 }
 
 # taken from isard-vdi thanks to @tuxinthejungle Alberto Larraz
-sub _display_file_spice($self,$user) {
+sub _display_file_spice {
+    my $self = shift;
+    my $user = shift;
+
 
     my ($ip,$port) = $self->display($user) =~ m{spice://(\d+\.\d+\.\d+\.\d+):(\d+)};
 
@@ -862,7 +906,10 @@ Return information about the domain.
 
 =cut
 
-sub info($self, $user) {
+sub info {
+    my $self = shift;
+    my $user = shift;
+
     my $info = {
         id => $self->id
         ,name => $self->name
@@ -893,7 +940,9 @@ sub info($self, $user) {
     return $info;
 }
 
-sub _msg_timeout($self) {
+sub _msg_timeout {
+    my $self = shift;
+
     return if !$self->run_timeout;
     my $msg_timeout = '';
 
@@ -946,7 +995,9 @@ sub _insert_db {
     $self->_insert_db_extra();
 }
 
-sub _insert_db_extra($self) {
+sub _insert_db_extra {
+    my $self = shift;
+
     return if $self->is_known_extra();
 
     my $sth = $$CONNECTOR->dbh->prepare("INSERT INTO domains_".lc($self->type)
@@ -968,8 +1019,9 @@ It is not expected to run by itself, the remove function calls it before proceed
 
 sub pre_remove { }
 
-sub _pre_remove_domain($self, $user=undef) {
-
+sub _pre_remove_domain {
+    my $self = shift;
+    my $user = (shift or undef);
 
     $self->_allow_remove($user);
     $self->is_volatile()        if $self->is_known || $self->domain;
@@ -996,7 +1048,8 @@ sub _after_remove_domain {
     $self->_remove_domain_db();
 }
 
-sub _remove_access_attributes_db($self) {
+sub _remove_access_attributes_db {
+    my $self = shift;
 
     return if !$self->{_data}->{id};
     my $sth = $$CONNECTOR->dbh->prepare("DELETE FROM access_ldap_attribute"
@@ -1331,7 +1384,10 @@ sub clone {
     return $clone;
 }
 
-sub _copy_clone($self, %args) {
+sub _copy_clone {
+    my $self = shift;
+    my %args = @_;
+
     my $name = delete $args{name} or confess "ERROR: Missing name";
     my $user = delete $args{user} or confess "ERROR: Missing user";
     my $memory = delete $args{memory};
@@ -1374,7 +1430,10 @@ sub _post_pause {
     $self->_remove_iptables();
 }
 
-sub _post_hibernate($self, $user) {
+sub _post_hibernate {
+    my $self = shift;
+    my $user = shift;
+
     $self->_data(status => 'hibernated');
     $self->_remove_iptables();
 }
@@ -1431,7 +1490,7 @@ sub _post_shutdown {
         my $req = Ravada::Request->force_shutdown_domain(
             id_domain => $self->id
                 , uid => $arg{user}->id
-                 , at => time+$timeout 
+                 , at => time+$timeout
         );
     }
     Ravada::Request->enforce_limits();
@@ -1442,7 +1501,10 @@ sub _post_shutdown {
     _test_iptables_jump();
 }
 
-sub _around_is_active($orig, $self) {
+sub _around_is_active {
+    my $orig = shift;
+    my $self= shift;
+
     return 0 if $self->is_removed;
     my $is_active = $self->$orig();
     return $is_active if $self->readonly
@@ -1664,10 +1726,10 @@ sub _add_iptable {
     @iptables_arg = ( '0.0.0.0/0'
                         ,$local_ip, 'filter', $IPTABLES_CHAIN, 'DROP',
                         ,{'protocol' => 'tcp', 's_port' => 0, 'd_port' => $local_port});
-    
+
     ($rv, $out_ar, $errs_ar) = $ipt_obj->append_ip_rule(@iptables_arg)
                                 if !$>;
-    
+
     $self->_log_iptable(iptables => \@iptables_arg, %args);
 
 }
@@ -1720,7 +1782,8 @@ sub open_iptables {
     $self->_add_iptable(%args);
 }
 
-sub _obj_iptables($create_chain=1) {
+sub _obj_iptables {
+    my $create_chain = (shift or 1);
 
 	my %opts = (
     	'use_ipv6' => 0,         # can set to 1 to force ip6tables usage
@@ -1769,7 +1832,9 @@ sub _obj_iptables($create_chain=1) {
     return $ipt_obj;
 }
 
-sub _add_jump($ipt_obj) {
+sub _add_jump {
+    my $ipt_obj = shift;
+
     my $out = `iptables -L INPUT -n`;
     my $count = 0;
     for my $line ( split /\n/,$out ) {
@@ -1912,7 +1977,10 @@ Returns if the domain is volatile, so it will be removed on shutdown
 
 =cut
 
-sub is_volatile($self, $value=undef) {
+sub is_volatile {
+    my $self = shift;
+    my $value = (shift or undef);
+
     return $self->{_is_volatile} if exists $self->{_is_volatile}    && !defined $value;
 
     my $is_volatile = 0;
@@ -1932,7 +2000,9 @@ shut down.
 
 =cut
 
-sub is_persistent($self) {
+sub is_persistent {
+    my $self = shift;
+
     return !$self->{_is_volatile} if exists $self->{_is_volatile};
     return 0;
 }
@@ -1951,7 +2021,11 @@ sub run_timeout {
     return $self->_set_data('run_timeout',@_);
 }
 
-sub _set_data($self, $field, $value=undef) {
+sub _set_data {
+    my $self = shift;
+    my $field = shift;
+    my $value = (shift or undef);
+
     if (defined $value) {
         my $sth = $$CONNECTOR->dbh->prepare("UPDATE domains set $field=?"
                 ." WHERE id=?");
@@ -1964,7 +2038,11 @@ sub _set_data($self, $field, $value=undef) {
     return $self->_data($field);
 }
 
-sub _propagate_data($self, $field, $value) {
+sub _propagate_data {
+    my $self = shift;
+    my $field = shift;
+    my $value = shift;
+
     my $sth = $$CONNECTOR->dbh->prepare("UPDATE domains set $field=?"
                 ." WHERE id_base=?");
     $sth->execute($value, $self->id);
@@ -2036,7 +2114,7 @@ sub get_controller {
 
     my $sub = $self->get_controller_by_name($name);
 #    my $sub = $GET_CONTROLLER_SUB{$name};
-    
+
     die "I can't get controller $name for domain ".$self->name
         if !$sub;
 
@@ -2050,7 +2128,9 @@ Returns a hashref of the hardware controllers for this virtual machine
 =cut
 
 
-sub get_controllers($self) {
+sub get_controllers {
+    my $self = shift;
+
     my $info;
     my %controllers = $self->list_controllers();
     for my $name ( sort keys %controllers ) {
@@ -2137,7 +2217,9 @@ sub set_driver_id {
     $sth->finish;
 }
 
-sub remote_ip($self) {
+sub remote_ip {
+    my $self = shift;
+
 
     my $sth = $$CONNECTOR->dbh->prepare(
         "SELECT remote_ip FROM iptables "
@@ -2209,7 +2291,10 @@ Argument: name
 
 =cut
 
-sub get_driver_id($self, $name) {
+sub get_driver_id {
+    my $self = shift;
+    my $name = shift;
+
     my $value = $self->get_driver($name);
     return if !defined $value;
 
@@ -2245,7 +2330,11 @@ Sets a domain option:
 
 =cut
 
-sub set_option($self, $option, $value) {
+sub set_option {
+    my $self = shift;
+    my $option = shift;
+    my $value = shift;
+
     my %valid_option = map { $_ => 1 } qw( description run_timeout volatile_clones id_owner);
     die "ERROR: Invalid option '$option'"
         if !$valid_option{$option};
@@ -2271,7 +2360,10 @@ sub type {
     return $self->_data('vm');
 }
 
-sub _pre_clone($self,%args) {
+sub _pre_clone {
+    my $self = shift;
+    my %args = @_;
+
     my $name = delete $args{name};
     my $user = delete $args{user};
     my $memory = delete $args{memory};
@@ -2291,7 +2383,9 @@ Returns the name of the file where the virtual machine screenshot is stored
 
 =cut
 
-sub file_screenshot($self){
+sub file_screenshot {
+    my $self = shift;
+
   return $self->_data('file_screenshot');
 }
 
@@ -2313,7 +2407,10 @@ removed when shut down
 
 =cut
 
-sub volatile_clones($self, $value=undef) {
+sub volatile_clones {
+    my $self = shift;
+    my $value = (shift or undef);
+
     return $self->_data('volatile_clones', $value);
 }
 
@@ -2337,7 +2434,10 @@ Valid values are:
 
 =cut
 
-sub status($self, $value=undef) {
+sub status {
+    my $self = shift;
+    my $value = (shift or undef);
+
     confess "ERROR: the status can't be updated on read only mode."
         if $self->readonly;
     return $self->_data('status', $value);
@@ -2372,7 +2472,10 @@ you find suitable.
 =cut
 
 
-sub client_status($self, $force=0) {
+sub client_status {
+    my $self = shift;
+    my $force = (shift or 0);
+
     return if !$self->is_active;
     return if !$self->remote_ip;
 
@@ -2390,7 +2493,10 @@ sub client_status($self, $force=0) {
     return $status;
 }
 
-sub _run_netstat($self, $force=undef) {
+sub _run_netstat {
+    my $self = shift;
+    my $force = (shift or undef);
+
     if (!$force && $self->_vm->{_netstat}
         && ( time - $self->_vm->{_netstat_time} < $TIME_CACHE_NETSTAT+1 ) ) {
         return $self->_vm->{_netstat};
@@ -2404,7 +2510,10 @@ sub _run_netstat($self, $force=undef) {
     return $out;
 }
 
-sub _client_connection_status($self, $force=undef) {
+sub _client_connection_status {
+    my $self = shift;
+    my $force = (shift or undef);
+
     #TODO: this should be run in the VM
     #       in develop release VM->run_command does exists
     my $display = $self->display(Ravada::Utils::user_daemon());
@@ -2429,7 +2538,10 @@ hardware change can be applied.
 
 =cut
 
-sub needs_restart($self, $value=undef) {
+sub needs_restart {
+    my $self = shift;
+    my $value = (shift or undef);
+
     return $self->_data('needs_restart',$value);
 }
 
@@ -2457,7 +2569,13 @@ Example:
 
 =cut
 
-sub allow_ldap_access($self, $attribute, $value, $allowed=1, $last=0 ) {
+sub allow_ldap_access {
+    my $self = shift;
+    my $attribute = shift;
+    my $value = shift;
+    my $allowed = (shift or 1);
+    my $last = (shift or 0);
+
     my $sth = $$CONNECTOR->dbh->prepare(
         "SELECT max(n_order) FROM access_ldap_attribute "
         ." WHERE id_domain=?"
@@ -2484,7 +2602,10 @@ The id_access can be obtained through list_ldap_access method.
 =cut
 
 #TODO: check something has been deleted
-sub delete_ldap_access($self, $id_access) {
+sub delete_ldap_access {
+    my $self = shift;
+    my $id_access = shift;
+
     my $sth = $$CONNECTOR->dbh->prepare(
         "DELETE FROM access_ldap_attribute "
         ."WHERE id_domain=? AND id=? ");
@@ -2498,7 +2619,9 @@ list is a hashref with all the fields of the restriction.
 
 =cut
 
-sub list_ldap_access($self) {
+sub list_ldap_access {
+    my $self = shift;
+
     my $sth = $$CONNECTOR->dbh->prepare(
         "SELECT * from access_ldap_attribute"
         ." WHERE id_domain = ? "
@@ -2527,11 +2650,19 @@ Example:
 
 =cut
 
-sub deny_ldap_access($self, $attribute, $value) {
+sub deny_ldap_access {
+    my $self = shift;
+    my $attribute = shift;
+    my $value = shift;
+
     $self->allow_ldap_access($attribute, $value, 0);
 }
 
-sub _set_access_order($self, $id_access, $n_order) {
+sub _set_access_order {
+    my $self = shift;
+    my $id_access = shift;
+    my $n_order = shift;
+
     my $sth = $$CONNECTOR->dbh->prepare("UPDATE access_ldap_attribute "
         ." SET n_order=? WHERE id=? AND id_domain=?");
     $sth->execute($n_order, $id_access, $self->id);
@@ -2548,7 +2679,11 @@ according to the position change requested.
 
 =cut
 
-sub move_ldap_access($self, $id_access, $position) {
+sub move_ldap_access {
+    my $self = shift;
+    my $id_access = shift;
+    my $position = shift;
+
     confess "Error: You can only move position +1 or -1"
         if ($position != -1 && $position != 1);
 
@@ -2599,7 +2734,12 @@ can be modified:
 =cut
 
 
-sub set_ldap_access($self, $id_access, $allowed, $last) {
+sub set_ldap_access {
+    my $self = shift;
+    my $id_access = shift;
+    my $allowed = shift;
+    my $last = shift;
+    
     my $sth = $$CONNECTOR->dbh->prepare("UPDATE access_ldap_attribute "
         ." SET allowed=?, last=?"
         ." WHERE id=?");

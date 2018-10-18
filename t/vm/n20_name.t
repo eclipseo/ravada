@@ -9,8 +9,8 @@ use YAML qw(DumpFile);
 use lib 't/lib';
 use Test::Ravada;
 
-no warnings "experimental::signatures";
-use feature qw(signatures);
+no if $] >= 5.020000, warnings => "experimental::signatures";
+use if $] >= 5.020000, feature => qw(signatures);
 
 use_ok('Ravada');
 
@@ -25,7 +25,9 @@ my $REMOTE_IP = '9.9.9.9';
 my $CHAIN = 'RAVADA';
 ##################################################################################
 
-sub _search_other_ip($ip) {
+sub _search_other_ip {
+    my $ip = shift;
+
     my $out = `ifconfig`;
     for my $line ( split /\n/, $out ) {
         my ($ip2) = $line =~ /inet.(\d+\.\d+\.\d+\.\d+) /;
@@ -37,7 +39,9 @@ sub _search_other_ip($ip) {
     die "I can't find another IP address here";
 }
 
-sub test_nat($vm_name) {
+sub test_nat {
+    my $vm_name = shift;
+
     my $domain = create_domain($vm_name);
 
     $domain->shutdown_now() if $domain->is_active;
@@ -139,7 +143,10 @@ sub test_nat($vm_name) {
     rvd_back($FILE_CONFIG);
 }
 
-sub test_chain($vm_name, %args) {
+sub test_chain {
+    my $vm_name = shift;
+    my %args = @_;
+
     SKIP: {
         skip("SKIPPED: iptables test must be run from root user", 2) if $>;
     my $jump =  (delete $args{jump} or 'ACCEPT');

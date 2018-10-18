@@ -18,8 +18,8 @@ use Mojo::Home;
 #package Ravada::I18N:en;
 #####
 #
-no warnings "experimental::signatures";
-use feature qw(signatures);
+no if $] >= 5.020000, warnings => "experimental::signatures";
+use if $] >= 5.020000, feature => qw(signatures);
 
 use lib 'lib';
 
@@ -651,7 +651,11 @@ get '/add_ldap_access/(#id_domain)/(#attribute)/(#value)/(#allowed)/(#last)' => 
 
 };
 
-sub _fix_default_ldap_access($c, $domain, $allowed) {
+sub _fix_default_ldap_access{
+    my $c = shift;
+    my $domain = shift;
+    my $allowed = shift;
+
     my @list = $domain->list_ldap_access();
     my $default_found;
     for ( @list ) {
@@ -881,15 +885,15 @@ get '/machine/hardware/remove/(#id_domain)/(#hardware)/(#index)' => sub {
 
     return access_denied($c)
         unless $USER->id == $domain->id_owner || $USER->is_admin;
-    
+
     my $req = Ravada::Request->remove_hardware(uid => $USER->id
         , id_domain => $domain_id
         , name => $hardware
         , index => $index
     );
-    
-    $RAVADA->wait_request($req,60);  
-    
+
+    $RAVADA->wait_request($req,60);
+
     return $c->render( json => { ok => "Hardware Modified" });
 };
 
@@ -1344,7 +1348,12 @@ sub base_id {
     return $base->id;
 }
 
-sub provision_req($c, $id_base, $name, $ram=0, $disk=0) {
+sub provision_req {
+    my $c = shift;
+    my $id_base = shift;
+    my $name = shift;
+    my $ram = (shift or 0);
+    my $disk = (shift or 0);
 
     if ( $RAVADA->domain_exists($name) ) {
         my $domain = $RAVADA->search_domain($name);
@@ -1387,7 +1396,10 @@ sub _new_domain_name {
     }
 }
 
-sub run_request($c, $request) {
+sub run_request {
+    my $c = shift;
+    my $request = shift;
+
     return $c->render(template => 'main/run_request', request => $request
         , auto_view => ( $CONFIG_FRONT->{auto_view} or $c->session('auto_view') or 0)
     );
@@ -1530,7 +1542,7 @@ sub manage_machine {
         my $req_mem = Ravada::Request->change_max_memory(uid => $USER->id, id_domain => $domain->id, ram => $c->param("ram")*1024);
         push @reqs,($req_mem);
         $c->stash(ram => $c->param('ram'));
-        
+
         push @messages,("MAx memory changed from "
                     .int($domain->get_info()->{max_mem}/1024)." to ".$c->param('ram'));
     }
@@ -1575,7 +1587,7 @@ sub manage_machine {
             $msg .= " Changes will apply on next start."    if $domain->is_active;
             push @messages,($msg);
             push @reqs,($req2);
-        
+
     }
     $c->stash(cur_driver => \%cur_driver);
 
@@ -1603,7 +1615,7 @@ sub manage_machine {
 
             my $old_value = $domain->_data($option);
             my $value = $c->param($option);
-            
+
             $value= 0 if $option eq 'volatile_clones' && !$value;
 
             if ( $option eq 'run_timeout' ) {
@@ -1669,7 +1681,10 @@ sub view_machine {
     );
 }
 
-sub clone_machine($c, $anonymous=0) {
+sub clone_machine {
+    my $c = shift;
+    my $anonymous = (shift or 0);
+
     return login($c) unless $anonymous || _logged_in($c);
     _init_error($c);
 

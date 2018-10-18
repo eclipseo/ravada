@@ -19,8 +19,8 @@ use IO::Socket;
 use IO::Interface;
 use Net::Domain qw(hostfqdn);
 
-no warnings "experimental::signatures";
-use feature qw(signatures);
+no if $] >= 5.020000, warnings => "experimental::signatures";
+use if $] >= 5.020000, feature => qw(signatures);
 
 requires 'connect';
 
@@ -70,7 +70,7 @@ has 'readonly' => (
 ############################################################
 #
 # Method Modifiers definition
-# 
+#
 #
 around 'create_domain' => \&_around_create_domain;
 
@@ -118,7 +118,7 @@ sub open {
 sub _check_readonly {
     my $self = shift;
     confess "ERROR: You can't create domains in read-only mode "
-        if $self->readonly 
+        if $self->readonly
 
 }
 
@@ -278,7 +278,10 @@ sub search_domain_by_id {
     return $self->search_domain($name);
 }
 
-sub _domain_in_db($self, $name) {
+sub _domain_in_db {
+    my $self = shift;
+    my $name = shift;
+
 
     my $sth = $$CONNECTOR->dbh->prepare("SELECT id FROM domains WHERE name=?");
     $sth->execute($name);
@@ -326,7 +329,9 @@ Returns the IP of the VM when it is in a NAT environment
 
 =cut
 
-sub nat_ip($self) {
+sub nat_ip {
+    my $self = shift;
+
     return Ravada::nat_ip();
 }
 
@@ -566,7 +571,7 @@ sub min_free_memory {
     return $self->_data('min_free_memory');
 }
 
-=head2 max_load 
+=head2 max_load
 
 Returns the maximum cpu load that the host can handle.
 
@@ -601,7 +606,10 @@ Returns a list of strings with the nams of the drivers.
 
 =cut
 
-sub list_drivers($self, $name=undef) {
+sub list_drivers {
+    my $self = shift;
+    my $name = (shift or undef);
+
     return Ravada::Domain::drivers(undef,$name,$self->type);
 }
 

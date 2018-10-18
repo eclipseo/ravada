@@ -6,8 +6,8 @@ use Data::Dumper;
 use POSIX qw(WNOHANG);
 use Test::More;
 
-no warnings "experimental::signatures";
-use feature qw(signatures);
+no if $] >= 5.020000, warnings => "experimental::signatures";
+use if $] >= 5.020000, feature => qw(signatures);
 
 
 use_ok('Ravada');
@@ -20,7 +20,9 @@ init();
 
 ###############################################################################
 
-sub test_request_start($vm_name) {
+sub test_request_start {
+    my $vm_name = shift;
+
     my $domain = create_domain($vm_name);
     my $req = Ravada::Request->start_domain(
         id_domain => $domain->id
@@ -47,7 +49,9 @@ sub test_request_start($vm_name) {
     $domain->remove(user_admin);
 }
 
-sub test_request_create_start($vm_name) {
+sub test_request_create_start {
+    my $vm_name = shift;
+
     my $base = create_domain($vm_name);
     $base->prepare_base(user_admin);
 
@@ -67,7 +71,9 @@ sub test_request_create_start($vm_name) {
     is($domain->remote_ip,'127.0.0.1');
     is($domain->is_active,1);
 }
-sub test_request_iptables($vm_name) {
+sub test_request_iptables {
+    my $vm_name = shift;
+
     my $domain = create_domain($vm_name);
     my $req = Ravada::Request->open_iptables(
         id_domain => $domain->id

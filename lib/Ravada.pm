@@ -17,8 +17,8 @@ use YAML;
 
 use Socket qw( inet_aton inet_ntoa );
 
-no warnings "experimental::signatures";
-use feature qw(signatures);
+no if $] >= 5.020000, warnings => "experimental::signatures";
+use if $] >= 5.020000, feature => qw(signatures);
 
 use Ravada::Auth;
 use Ravada::Request;
@@ -43,8 +43,8 @@ eval {
 };
 $ERROR_VM{Void} = $@;
 
-no warnings "experimental::signatures";
-use feature qw(signatures);
+no if $] >= 5.020000, warnings => "experimental::signatures";
+use if $] >= 5.020000, feature => qw(signatures);
 
 =head1 NAME
 
@@ -134,7 +134,9 @@ sub BUILD {
 
 }
 
-sub _install($self) {
+sub _install {
+    my $self = shift;
+
     $self->_create_tables();
     $self->_upgrade_tables();
     $self->_update_data();
@@ -520,7 +522,8 @@ sub _update_isos {
 
 }
 
-sub _update_domain_drivers_types($self) {
+sub _update_domain_drivers_types{
+    my $self = shift;
 
     my $data = {
         image => {
@@ -559,7 +562,8 @@ sub _update_domain_drivers_types($self) {
     $self->_update_table('domain_drivers_types','id',$data);
 }
 
-sub _update_domain_drivers_options($self) {
+sub _update_domain_drivers_options{
+    my $self = shift;
 
     my $data = {
         qxl => {
@@ -722,7 +726,11 @@ sub _update_domain_drivers_options($self) {
     $self->_update_table('domain_drivers_options','id',$data);
 }
 
-sub _update_table($self, $table, $field, $data) {
+sub _update_table {
+    my $self = shift;
+    my $table = shift;
+    my $field = shift;
+    my $data = shift;
 
     my $sth_search = $CONNECTOR->dbh->prepare("SELECT id FROM $table WHERE $field = ?");
     for my $name (keys %$data) {
@@ -787,13 +795,17 @@ sub _update_data {
     $self->_add_indexes();
 }
 
-sub _add_indexes($self) {
+sub _add_indexes {
+    my $self = shift;
+
     return if $CONNECTOR->dbh->{Driver}{Name} !~ /mysql/i;
     $self->_add_indexes_domains();
     $self->_add_indexes_requests();
 }
 
-sub _add_indexes_domains($self) {
+sub _add_indexes_domains {
+    my $self = shift;
+
     my %index;
     my $sth = $CONNECTOR->dbh->prepare("show index from domains");
     $sth->execute;
@@ -806,7 +818,9 @@ sub _add_indexes_domains($self) {
         ."(id_base)");
     $sth->execute;
 }
-sub _add_indexes_requests($self) {
+sub _add_indexes_requests {
+    my $self = shift;
+
     my %index;
     my $sth = $CONNECTOR->dbh->prepare("show index from requests");
     $sth->execute;
@@ -820,7 +834,8 @@ sub _add_indexes_requests($self) {
     $sth->execute;
 }
 
-sub _rename_grants($self) {
+sub _rename_grants{
+    my $self = shift;
 
     my %rename = (
         create_domain => 'create_machine'
@@ -842,7 +857,8 @@ sub _rename_grants($self) {
     }
 }
 
-sub _alias_grants($self) {
+sub _alias_grants{
+    my $self = shift;
 
     my %alias= (
         remove_clone => 'remove_clones'
@@ -863,13 +879,19 @@ sub _alias_grants($self) {
     }
 }
 
-sub _add_grants($self) {
+sub _add_grants{
+    my $self = shift;
     $self->_add_grant('shutdown', 1,"Can shutdown own virtual machines");
     $self->_add_grant('screenshot', 1,"Can get a screenshot of own virtual machines");
     $self->_add_grant('start_many',0,"Can have more than one machine started")
 }
 
-sub _add_grant($self, $grant, $allowed, $description) {
+sub _add_grant{
+    my $self = shift;
+    my $grant = shift;
+    my $allowed = shift;
+    my $description = shift;
+    
     my $sth = $CONNECTOR->dbh->prepare(
         "SELECT id FROM grant_types WHERE name=?"
     );
@@ -903,7 +925,8 @@ sub _add_grant($self, $grant, $allowed, $description) {
     }
 }
 
-sub _null_grants($self) {
+sub _null_grants{
+    my $self = shift;
     my $sth = $CONNECTOR->dbh->prepare("SELECT count(*) FROM grant_types "
             ." WHERE enabled = NULL "
         );
@@ -914,7 +937,8 @@ sub _null_grants($self) {
     return $count;
 }
 
-sub _enable_grants($self) {
+sub _enable_grants{
+    my $self = shift;
 
     return if $self->_null_grants();
 
@@ -957,7 +981,8 @@ sub _enable_grants($self) {
 
 }
 
-sub _update_old_qemus($self) {
+sub _update_old_qemus{
+    my $self = shift;
     my $sth = $CONNECTOR->dbh->prepare("UPDATE vms SET vm_type='KVM'"
         ." WHERE vm_type='qemu' AND name ='KVM_localhost'"
     );
@@ -965,7 +990,9 @@ sub _update_old_qemus($self) {
 
 }
 
-sub _set_url_isos($self, $new_url='http://localhost/iso/') {
+sub _set_url_isos {
+    my $self = shift;
+    my $new_url = (shift or 'http://localhost/iso/');
     $new_url .= '/' if $new_url !~ m{/$};
     my $sth = $CONNECTOR->dbh->prepare(
         "SELECT id,url FROM iso_images "
@@ -1524,7 +1551,8 @@ List all the Virtual Machine Managers
 
 =cut
 
-sub list_vms($self) {
+sub list_vms{
+    my $self = shift;
     return @{$self->vm};
 }
 
@@ -2239,7 +2267,10 @@ sub _cmd_open_iptables {
     );
 }
 
-sub _cmd_clone($self, $request) {
+sub _cmd_clone {
+    my $self = shift;
+    my $request = shift;
+
     my $domain = Ravada::Domain->open($request->args('id_domain'));
 
     my @args = ( request => $request);
@@ -2489,7 +2520,9 @@ sub _cmd_set_driver {
     $domain->needs_restart(1) if $domain->is_active;
 }
 
-sub _cmd_refresh_storage($self, $request=undef) {
+sub _cmd_refresh_storage {
+    my $self = shift;
+    my $request = (shift or undef);
 
     if ($request && ( my $id_recent = $request->done_recently(60))) {
         die "Command ".$request->command." run recently by $id_recent.\n";
@@ -2503,7 +2536,10 @@ sub _cmd_refresh_storage($self, $request=undef) {
     $vm->refresh_storage();
 }
 
-sub _cmd_change_owner($self, $request) {
+sub _cmd_change_owner {
+    my $self = shift;
+    my $request = shift;
+
     my $uid = $request->args('uid');
     my $id_domain = $request->args('id_domain');
     my $sth = $CONNECTOR->dbh->prepare(
@@ -2514,7 +2550,10 @@ sub _cmd_change_owner($self, $request) {
     $sth->finish;
 }
 
-sub _cmd_domain_autostart($self, $request ) {
+sub _cmd_domain_autostart {
+    my $self = shift;
+    my $request = shift;
+
     my $uid = $request->args('uid');
     my $id_domain = $request->args('id_domain') or die "ERROR: Missing id_domain";
 
@@ -2523,7 +2562,9 @@ sub _cmd_domain_autostart($self, $request ) {
     $domain->autostart($request->args('value'), $user);
 }
 
-sub _cmd_refresh_vms($self, $request=undef) {
+sub _cmd_refresh_vms {
+    my $self = shift;
+    my $request = (shift or undef);
 
     if ($request && (my $id_recent = $request->done_recently(30))) {
         die "Command ".$request->command." run recently by $id_recent.\n";
@@ -2535,7 +2576,10 @@ sub _cmd_refresh_vms($self, $request=undef) {
     $self->_refresh_volatile_domains();
 }
 
-sub _cmd_change_max_memory($self, $request) {
+sub _cmd_change_max_memory {
+    my $self = shift;
+    my $request = shift;
+
     my $uid = $request->args('uid');
     my $id_domain = $request->args('id_domain');
     my $memory = $request->args('ram');
@@ -2544,7 +2588,10 @@ sub _cmd_change_max_memory($self, $request) {
     $domain->set_max_mem($memory);
 }
 
-sub _cmd_change_curr_memory($self, $request) {
+sub _cmd_change_curr_memory {
+    my $self = shift;
+    my $request = shift;
+
     my $uid = $request->args('uid');
     my $id_domain = $request->args('id_domain');
     my $memory = $request->args('ram');
@@ -2562,7 +2609,11 @@ sub _cmd_start_many_domains{
 
 }
 
-sub _clean_requests($self, $command, $request=undef) {
+sub _clean_requests {
+    my $self = shift;
+    my $command = shift;
+    my $request = (shift or undef);
+
     my $query = "DELETE FROM requests "
         ." WHERE command=? "
         ."   AND status='requested'";
@@ -2580,7 +2631,10 @@ sub _clean_requests($self, $command, $request=undef) {
     }
 }
 
-sub _refresh_active_domains($self, $request=undef) {
+sub _refresh_active_domains {
+    my $self = shift;
+    my $request = (shift or undef);
+
     my $id_domain;
     $id_domain = $request->defined_arg('id_domain')  if $request;
 
@@ -2607,7 +2661,12 @@ sub _refresh_active_domains($self, $request=undef) {
     return \%active_domain, \%active_vm;
 }
 
-sub _refresh_active_domain($self, $vm, $domain, $active_domain) {
+sub _refresh_active_domain {
+    my $self = shift;
+    my $vm = shift;
+    my $domain = shift;
+    my $active_domain = shift;
+
     return if $domain->is_hibernated();
 
     my $is_active = $domain->is_active();
@@ -2624,7 +2683,11 @@ sub _refresh_active_domain($self, $vm, $domain, $active_domain) {
 
 }
 
-sub _refresh_down_domains($self, $active_domain, $active_vm) {
+sub _refresh_down_domains {
+    my $self = shift;
+    my $active_domain = shift;
+    my $active_vm = shift;
+
     my $sth = $CONNECTOR->dbh->prepare(
         "SELECT id, name, id_vm FROM domains WHERE status='active'"
     );
@@ -2649,7 +2712,9 @@ sub _refresh_down_domains($self, $active_domain, $active_vm) {
     }
 }
 
-sub _refresh_volatile_domains($self) {
+sub _refresh_volatile_domains{
+    my $self = shift;
+
    my $sth = $CONNECTOR->dbh->prepare(
         "SELECT id, name, id_vm FROM domains WHERE is_volatile=1"
     );
@@ -2789,11 +2854,16 @@ sub import_domain {
     return $vm->import_domain($name, $user, $spinoff_disks);
 }
 
-sub _cmd_enforce_limits($self, $request=undef) {
+sub _cmd_enforce_limits {
+    my $self = shift;
+    my $request = (shift or undef);
+
     _enforce_limits_active($self, $request);
 }
 
-sub _enforce_limits_active($self, $request) {
+sub _enforce_limits_active {
+    my $self = shift;
+    my $request = shift;
 
     if (my $id_recent = $request->done_recently(30)) {
         die "Command ".$request->command." run recently by $id_recent.\n";

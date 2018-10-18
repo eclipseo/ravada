@@ -6,8 +6,8 @@ use XML::LibXML;
 
 extends 'Ravada::Front::Domain';
 
-no warnings "experimental::signatures";
-use feature qw(signatures);
+no if $] >= 5.020000, warnings => "experimental::signatures";
+use if $] >= 5.020000, feature => qw(signatures);
 
 our %GET_CONTROLLER_SUB = (
     usb => \&_get_controller_usb
@@ -25,11 +25,15 @@ our %GET_DRIVER_SUB = (
 );
 
 
-sub get_controller_by_name($self, $name) {
+sub get_controller_by_name {
+    my $self = shift;
+    my $name = shift;
+
     return $GET_CONTROLLER_SUB{$name};
 }
 
-sub list_controllers($self) {
+sub list_controllers {
+    my $self = shift;
     return %GET_CONTROLLER_SUB;
 }
 
@@ -37,14 +41,14 @@ sub _get_controller_usb {
 	my $self = shift;
     $self->xml_description if !$self->readonly();
     my $doc = XML::LibXML->load_xml(string => $self->_data_extra('xml'));
-    
+
     my @ret;
-    
+
     for my $controller ($doc->findnodes('/domain/devices/redirdev')) {
         next if $controller->getAttribute('bus') ne 'usb';
-        
+
         push @ret,('type="'.$controller->getAttribute('type').'"');
-    } 
+    }
 
     return $ret[0] if !wantarray && scalar@ret <2;
     return @ret;

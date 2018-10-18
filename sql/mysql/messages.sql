@@ -4,7 +4,7 @@ CREATE TABLE `messages` (
   `id_request` int(11),
   `subject` varchar(120) DEFAULT NULL,
   `message` text,
-  `date_send` datetime default now(),
+  `date_send` datetime TIMESTAMP,
   `date_shown` datetime,
   `date_read` datetime,
   PRIMARY KEY (`id`),

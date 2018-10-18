@@ -102,7 +102,7 @@ sub test_new_domain {
 
 sub test_new_domain_iso {
     my $active = shift;
-    
+
     my $vm = rvd_back()->search_vm($BACKEND);
     my $iso = $vm->_search_iso(search_id_iso('alpine'));
     my $name = new_domain_name();
@@ -119,12 +119,12 @@ sub test_new_domain_iso {
         );
       };
     is($@,'') or return;
-    
+
     ok($domain,"Domain not created");
     my $exp_ref= 'Ravada::Domain::KVM';
     ok(ref $domain eq $exp_ref, "Expecting $exp_ref , got ".ref($domain))
         if $domain;
-        
+
     my @cmd = ('virsh','desc',$name);
     my ($in,$out,$err);
     run3(\@cmd,\$in,\$out,\$err);
@@ -138,7 +138,7 @@ sub test_new_domain_iso {
     ok($domain2->id eq $domain->id,"Expecting id = ".$domain->id." , got ".$domain2->id);
     ok($domain2->name eq $domain->name,"Expecting name = ".$domain->name." , got "
         .$domain2->name);
-    #TODO HOW TO COMPARE THE ISO OF TWO MACHINES    
+    #TODO HOW TO COMPARE THE ISO OF TWO MACHINES
 
     return $domain;
 }
@@ -193,7 +193,7 @@ sub test_domain{
         # test prepare base
         test_prepare_base($domain);
         ok($domain->is_base,"Domain should be base");
- 
+
         ok(test_domain_in_virsh($domain->name,$domain->name)," not in virsh list all");
         my $domain2;
         $vm->connect();
@@ -212,7 +212,7 @@ sub test_domain_in_virsh {
     for my $domain ($vm->vm->list_all_domains) {
         if ( $domain->get_name eq $name ) {
             $vm->disconnect;
-            return 1 
+            return 1
         }
     }
     $vm->disconnect();
@@ -262,7 +262,7 @@ sub test_domain_by_name {
 
 sub test_domain_with_iso {
   my $domain = test_new_domain_iso();
-  
+
   if (ok($domain,"test domain not created")) {
       test_remove_domain_by_name($domain->name);
   }

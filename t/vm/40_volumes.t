@@ -6,8 +6,8 @@ use Data::Dumper;
 use File::Copy;
 use Test::More;
 
-use v5.22; use feature qw(signatures);
-no warnings "experimental::signatures";
+use v5.22; use if $] >= 5.020000, feature => qw(signatures);
+no if $] >= 5.020000, warnings => "experimental::signatures";
 
 use lib 't/lib';
 use Test::Ravada;
@@ -194,7 +194,7 @@ sub test_domain_2_volumes {
     test_files_base($vm_name, $domain2, \@volumes);
 
     my $domain2_clone = test_clone($vm_name, $domain2);
-    
+
     test_add_volume($vm, $domain2, 'vdc');
 
     @volumes = $domain2->list_volumes;
@@ -380,7 +380,9 @@ sub test_domain_swap {
 
 }
 
-sub test_search($vm_name) {
+sub test_search {
+    my $vm_name = shift;
+
     my $vm = rvd_back->search_vm($vm_name);
     $vm->set_default_storage_pool_name('default') if $vm eq 'KVM';
 

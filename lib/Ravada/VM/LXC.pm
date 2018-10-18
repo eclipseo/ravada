@@ -30,11 +30,11 @@ sub BUILD {
 sub connect {
 
 #There are two user-space implementations of containers, each exploiting the same kernel
-#features. Libvirt allows the use of containers through the LXC driver by connecting 
+#features. Libvirt allows the use of containers through the LXC driver by connecting
 #to 'lxc:///'.
 #We use the other implementation, called simply 'LXC', is not compatible with libvirt,
-#but is more flexible with more userspace tools. 
-#Use of libvirt-lxc is not generally recommended due to a lack of Apparmor protection 
+#but is more flexible with more userspace tools.
+#Use of libvirt-lxc is not generally recommended due to a lack of Apparmor protection
 #for libvirt-lxc containers.
 #
 #Reference: https://help.ubuntu.com/lts/serverguide/lxc.html#lxc-startup
@@ -52,9 +52,9 @@ sub create_domain {
     my %args = @_;
 
     $args{active} = 1 if !defined $args{active};
-    
+
     croak "argument name required"       if !$args{name};
-    croak "argument id_template or id_base required" 
+    croak "argument id_template or id_base required"
         if !$args{id_template} && !$args{id_base};
 
     my $domain;
@@ -72,13 +72,13 @@ sub create_domain {
 sub _domain_create_from_template {
     my $self = shift;
     my %args = @_;
-    
-    croak "argument id_template required" 
+
+    croak "argument id_template required"
         if !$args{id_template};
 
     die "Domain $args{name} already exists"
         if $self->search_domain($args{name});
-    
+
     my $template = $self->_search_template($args{id_template});
     my $name = $args{name};
 
@@ -156,16 +156,16 @@ sub search_domain_by_id {
     return if !$name;
 
     return $self->search_domain($name);
-} 
+}
 
  sub _list_domains {
     my $self = shift;
     my @list = ('lxc-ls','-1');
     my ($in,$out,$err);
     run3(\@list,\$in,\$out,\$err);
-   
+
     #warn $out  if !$out;
-    warn $err   if $err;   
+    warn $err   if $err;
     my @domains;
     for (split /\n/,$out) {
         s/^\s+//;
@@ -184,7 +184,7 @@ sub list_domains {
         my $domain ;
         my $id;
         eval{ $domain = Ravada::Domain::LXC->new(
-                          domain => $name                          
+                          domain => $name
                          );
               $id = $domain->id()   if $domain;
           };

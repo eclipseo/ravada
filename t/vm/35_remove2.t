@@ -18,15 +18,15 @@ sub test_remove_domain {
 
     my $domain = create_domain($vm->type);
     $domain->shutdown( user => user_admin )  if $domain->is_active();
-    
+
     $domain->domain->undefine();
 
     my $removed = $domain->is_removed;
 
     ok($removed, "Domain deleted: $removed");
-    
+
     eval{ $domain->remove(user_admin) };
-    
+
     is($@,"");
 
     my $list = rvd_front->list_domains();
@@ -58,7 +58,7 @@ for my $vm_name ( q'KVM' ) {
 
         diag("Testing remove on $vm_name");
 
-		test_remove_domain($vm);        
+		test_remove_domain($vm);
 
     }
 }

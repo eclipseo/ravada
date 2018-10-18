@@ -302,7 +302,10 @@ Return true if the user has access to clone a virtual machine
 
 =cut
 
-sub allowed_access($self,$id_domain) {
+sub allowed_access {
+    my $self = shift;
+    my $id_domain = shift;
+
     return 1 if $self->is_admin;
 
     $self->_load_allowed();
@@ -316,7 +319,8 @@ sub allowed_access($self,$id_domain) {
     return 0;
 }
 
-sub _list_domains_access($self) {
+sub _list_domains_access {
+    my $self = shift;
 
     my @domains;
     my $sth = $$CONNECTOR->dbh->prepare(

@@ -42,13 +42,13 @@ sub test_create_domain {
 
     my $vm = $RVD_BACK->search_vm($vm_name);
     ok($vm,"Expecting VM $vm , got '".ref($vm)) or return;
-    
+
     my $domain_b = $vm->create_domain(
         name => $name
         ,active => 0
         ,create_args($vm_name)
     );
-    
+
     ok($domain_b);
 
     my $domain_f = $RVD_FRONT->search_domain($name);
@@ -57,7 +57,7 @@ sub test_create_domain {
     return $name;
 }
 
-sub test_start_domain { 
+sub test_start_domain {
 
     my $vm_name = shift;
     my $name = shift;
@@ -141,7 +141,7 @@ sub test_vm_ro {
     my $name = new_domain_name();
 
     my $vm = $RVD_FRONT->open_vm($vm_name);
-    
+
     my $domain;
     eval { $domain = $vm->create_domain(
         name => $name

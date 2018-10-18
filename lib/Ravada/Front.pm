@@ -20,8 +20,8 @@ use Ravada::Front::Domain;
 use Ravada::Front::Domain::KVM;
 use Ravada::Network;
 
-use feature qw(signatures);
-no warnings "experimental::signatures";
+use if $] >= 5.020000, feature => qw(signatures);
+no if $] >= 5.020000, warnings => "experimental::signatures";
 
 use Data::Dumper;
 
@@ -87,7 +87,10 @@ Returns a list of the base domains as a listref
 
 =cut
 
-sub list_bases($self, %args) {
+sub list_bases {
+    my $self = shift;
+    my %args = @_;
+
     $args{is_base} = 1;
     my $query = "SELECT name, id, is_base, id_owner FROM domains "
         ._where(%args)
@@ -166,7 +169,7 @@ sub list_machines_user {
                 );
             }
             $base{name_clone} = $clone->name;
-            $base{screenshot} = ( $clone->_data('file_screenshot') 
+            $base{screenshot} = ( $clone->_data('file_screenshot')
                                 or $base{screenshot});
             $base{is_active} = $clone->is_active;
             $base{id_clone} = $clone->id;
@@ -182,7 +185,10 @@ sub list_machines_user {
     return \@list;
 }
 
-sub list_machines($self, $user) {
+sub list_machines {
+    my $self = shift;
+    my $user = shift;
+
     return $self->list_domains() if $user->can_list_machines;
 
     my @list = ();
@@ -210,7 +216,11 @@ sub list_machines($self, $user) {
     return [sort { $a->{name} cmp $b->{name} } values %uniq];
 }
 
-sub _around_list_machines($orig, $self, $user) {
+sub _around_list_machines {
+    my $orig = shift;
+    my $self = shift;
+    my $user = shift;
+
     my $machines = $self->$orig($user);
     for my $m (@$machines) {
         $m->{can_shutdown} = $user->can_shutdown($m->{id});
@@ -243,7 +253,7 @@ sub search_clone_data {
     $sth->execute( map { $args{$_} } sort keys %args );
     my $row = $sth->fetchrow_hashref;
     return ( $row or {});
-        
+
 }
 
 =cut
@@ -269,7 +279,7 @@ sub list_domains {
 
     my $sth = $CONNECTOR->dbh->prepare($query);
     $sth->execute(map { $args{$_} } sort keys %args);
-    
+
     my @domains = ();
     while ( my $row = $sth->fetchrow_hashref) {
         my $domain ;
@@ -311,7 +321,9 @@ sub list_domains {
 
     return \@domains;
 }
-sub _where(%args) {
+sub _where {
+    my %args = @_;
+
     my $where = '';
     for my $field ( sort keys %args ) {
         $where .= " AND " if $where;
@@ -330,7 +342,7 @@ sub _where(%args) {
 sub list_clones {
   my $self = shift;
   my %args = @_;
-  
+
   my $domains = list_domains();
   my @clones;
   for (@$domains ) {
@@ -339,7 +351,10 @@ sub list_clones {
   return \@clones;
 }
 
-sub _remove_domain_db($self, $id) {
+sub _remove_domain_db {
+    my $self = shift;
+    my $id = shift;
+
     my $sth = $CONNECTOR->dbh->prepare("DELETE FROM domains WHERE id=?");
     $sth->execute($id);
     $sth->finish;
@@ -500,10 +515,13 @@ Returns a reference to a list of the users
 
 =cut
 
-sub list_users($self,$name=undef) {
+sub list_users {
+    my $self = shift;
+    my $name = (shift or undef);
+
     my $sth = $CONNECTOR->dbh->prepare("SELECT id, name FROM users ");
     $sth->execute();
-    
+
     my @users = ();
     while ( my $row = $sth->fetchrow_hashref) {
         next if defined $name && $row->{name} !~ /$name/;
@@ -534,7 +552,7 @@ Waits for a request for some seconds.
 
 =head3 Arguments
 
-=over 
+=over
 
 =item * request
 
@@ -719,7 +737,10 @@ Returns a list of ruquests : ( id , domain_name, status, error )
 
 =cut
 
-sub list_requests($self, $id_domain_req=undef, $seconds=60) {
+sub list_requests {
+    my $self = shift;
+    my $id_domain_req = (shift or undef);
+    my $seconds = (shift or 60);
 
     my @now = localtime(time-$seconds);
     $now[4]++;
@@ -887,7 +908,7 @@ sub list_bases_anonymous {
 
     my $sth = $CONNECTOR->dbh->prepare("SELECT id, name, id_base, is_public FROM domains where is_base=1 AND is_public=1");
     $sth->execute();
-    
+
     my @bases = ();
     while ( my $row = $sth->fetchrow_hashref) {
         next if !$net->allowed_anonymous($row->{id});
@@ -899,7 +920,7 @@ sub list_bases_anonymous {
 
 }
 
-=head2 disconnect_vm 
+=head2 disconnect_vm
 
 Disconnects all the conneted VMs
 

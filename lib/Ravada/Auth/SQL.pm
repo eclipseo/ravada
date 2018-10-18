@@ -18,8 +18,8 @@ use Digest::SHA qw(sha1_hex);
 use Hash::Util qw(lock_hash);
 use Moose;
 
-use feature qw(signatures);
-no warnings "experimental::signatures";
+use if $] >= 5.020000, feature => qw(signatures);
+no if $] >= 5.020000, warnings => "experimental::signatures";
 
 use vars qw($AUTOLOAD);
 
@@ -91,7 +91,7 @@ Returns a list of all the usernames
 
 =cut
 
-sub list_all_users() {
+sub list_all_users {
     my $sth = $$CON->dbh->prepare(
         "SELECT(name) FROM users ORDER BY name"
     );
@@ -164,7 +164,9 @@ sub add_user {
     return $user;
 }
 
-sub _search_id_grant($self, $type) {
+sub _search_id_grant {
+    my $self = shift;
+    my $type = shift;
 
     return $self->{_grant_id}->{$type}
         if exists $self->{_grant_id}->{$type};
@@ -291,7 +293,10 @@ Makes the user admin. Returns nothing.
 
 =cut
 
-sub make_admin($self, $id) {
+sub make_admin {
+    my $self = shift;
+    my $id = shift;
+
     my $sth = $$CON->dbh->prepare(
             "UPDATE users SET is_admin=1 WHERE id=?");
 
@@ -311,7 +316,10 @@ Remove user admin privileges. Returns nothing.
 
 =cut
 
-sub remove_admin($self, $id) {
+sub remove_admin {
+    my $self = shift;
+    my $id = shift;
+
     my $sth = $$CON->dbh->prepare(
             "UPDATE users SET is_admin=NULL WHERE id=?");
 
@@ -329,7 +337,10 @@ Sets or gets the external auth value of an user.
 
 =cut
 
-sub external_auth($self, $value=undef) {
+sub external_auth {
+    my $self = shift;
+    my $value = (shift or undef);
+
     if (!defined $value) {
         return $self->{_data}->{external_auth};
     }
@@ -404,7 +415,7 @@ sub can_list_clones {
     return 1 if $self->is_admin()
                 || $self->can_remove_clone_all();
     return 0;
-  
+
 }
 
 =head2 can_list_clones_from_own_base
@@ -413,7 +424,8 @@ Returns true if the user can list all machines that are clones from his bases
 
 =cut
 
-sub can_list_clones_from_own_base($self) {
+sub can_list_clones_from_own_base {
+    my $self = shift;
     return 1 if $self->can_remove_clones || $self->can_remove_clone_all
         || $self->can_shutdown_clones
         || $self->can_change_settings_clones;
@@ -522,9 +534,9 @@ Arguments: password
 sub compare_password {
     my $self = shift;
     my $password = shift or die "ERROR: password required\n";
-    
+
     _init_connector();
-    
+
     my $sth= $$CON->dbh->prepare("SELECT password FROM users WHERE name=?");
     $sth->execute($self->name);
     my $hex_pass = $sth->fetchrow();
@@ -571,7 +583,8 @@ Removes the user
 
 =cut
 
-sub remove($self) {
+sub remove {
+    my $self = shift;
     my $sth = $$CON->dbh->prepare("DELETE FROM users where id=?");
     $sth->execute($self->id);
     $sth->finish;
@@ -581,12 +594,15 @@ sub remove($self) {
 
 Returns if the user is allowed to perform a privileged action
 
-    if ($user->can_do("remove")) { 
+    if ($user->can_do("remove")) {
         ...
 
 =cut
 
-sub can_do($self, $grant) {
+sub can_do {
+    my $self = shift;
+    my $grant = shift;
+
     $self->_load_grants();
 
     confess "Wrong grant '$grant'\n".Dumper($self->{_grant_alias})
@@ -616,7 +632,11 @@ Returns if the user is allowed to perform a privileged action in a virtual machi
 
 =cut
 
-sub can_do_domain($self, $grant, $domain) {
+sub can_do_domain {
+    my $self = shift;
+    my $grant = shift;
+    my $domain = shift;
+
     my %valid_grant = map { $_ => 1 } qw(change_settings shutdown);
     confess "Invalid grant here '$grant'"   if !$valid_grant{$grant};
 
@@ -632,7 +652,8 @@ sub can_do_domain($self, $grant, $domain) {
     return 0;
 }
 
-sub _load_grants($self) {
+sub _load_grants {
+    my $self = shift;
     $self->_load_aliases();
     return if exists $self->{_grant};
 
@@ -658,14 +679,20 @@ sub _load_grants($self) {
 
 }
 
-sub _grant_alias($self, $name) {
+sub _grant_alias {
+    my $self = shift;
+    my $name = shift;
+
     my $alias = $name;
     return $self->{_grant_alias}->{$name} if exists $self->{_grant_alias}->{$name};
     return $name;# if exists $self->{_grant}->{$name};
 
 }
 
-sub _grant_alternate_name($self,$name_req) {
+sub _grant_alternate_name {
+    my $self = shift;
+    my $name_req = shift;
+
     my %name = ( $name_req => 1);
     while (my($name, $alias) = each %{$self->{_grant_alias}}) {
         $name{$name} = 1 if $name_req eq $alias;
@@ -674,7 +701,8 @@ sub _grant_alternate_name($self,$name_req) {
     return keys %name;
 }
 
-sub _load_aliases($self) {
+sub _load_aliases {
+    my $self = shift;
     return if exists $self->{_grant_alias};
 
     my $sth = $$CON->dbh->prepare("SELECT name,alias FROM grant_types_alias");
@@ -691,7 +719,10 @@ Grant an user permissions for normal users
 
 =cut
 
-sub grant_user_permissions($self,$user) {
+sub grant_user_permissions {
+    my $self = shift;
+    my $user = shift;
+
     $self->grant($user, 'clone');
     $self->grant($user, 'change_settings');
     $self->grant($user, 'remove');
@@ -705,7 +736,10 @@ Grant an user operator permissions, ie: hibernate all
 
 =cut
 
-sub grant_operator_permissions($self,$user) {
+sub grant_operator_permissions {
+    my $self = shift;
+    my $user = shift;
+
     $self->grant($user, 'hibernate_all');
     #TODO
 }
@@ -716,7 +750,10 @@ Grant an user manager permissions, ie: hibernate all clones
 
 =cut
 
-sub grant_manager_permissions($self,$user) {
+sub grant_manager_permissions {
+    my $self = shift;
+    my $user = shift;
+
     $self->grant($user, 'hibernate_clone');
     #TODO
 }
@@ -727,7 +764,10 @@ Grant an user all the permissions
 
 =cut
 
-sub grant_admin_permissions($self,$user) {
+sub grant_admin_permissions {
+    my $self = shift;
+    my $user = shift;
+
     my $sth = $$CON->dbh->prepare(
             "SELECT name FROM grant_types "
             ." WHERE enabled=1"
@@ -746,7 +786,10 @@ Revoke all permissions from an user
 
 =cut
 
-sub revoke_all_permissions($self,$user) {
+sub revoke_all_permissions {
+    my $self = shift;
+    my $user = shift;
+
     my $sth = $$CON->dbh->prepare(
             "SELECT name FROM grant_types WHERE enabled=1"
     );
@@ -763,14 +806,18 @@ sub revoke_all_permissions($self,$user) {
 
 Grant an user a specific permission, or revoke it
 
-    $admin_user->grant($user2,"clone");    # both are 
+    $admin_user->grant($user2,"clone");    # both are
     $admin_user->grant($user3,"clone",1);  # the same
 
     $admin_user->grant($user4,"clone",0);  # revoke a grant
 
 =cut
 
-sub grant($self,$user,$permission,$value=1) {
+sub grant {
+    my $self = shift;
+    my $user = shift;
+    my $permission = shift;
+    my $value = (shift or 1);
 
     confess "ERROR: permission '$permission' disabled "
         if $self->{_grant_disabled}->{$permission};
@@ -820,7 +867,11 @@ Revoke a permission from an user
 
 =cut
 
-sub revoke($self,$user,$permission) {
+sub revoke {
+    my $self = shift;
+    my $user = shift;
+    my $permission = shift;
+
     return $self->grant($user,$permission,0);
 }
 
@@ -831,7 +882,8 @@ Returns a list of all the available permissions
 
 =cut
 
-sub list_all_permissions($self) {
+sub list_all_permissions {
+    my $self = shift;
     return if !$self->is_admin && !$self->can_grant();
     $self->_load_grants();
 
@@ -856,7 +908,8 @@ Returns a list of all the permissions granted to the user
 
 =cut
 
-sub list_permissions($self) {
+sub list_permissions {
+    my $self = shift;
     $self->_load_grants();
     my @list;
     for my $grant (sort keys %{$self->{_grant}}) {
@@ -868,7 +921,10 @@ sub list_permissions($self) {
 
 =pod
 
-sub can_change_settings($self, $id_domain=undef) {
+sub can_change_settings {
+    my $self = shift;
+    my $id_domain = (shift or undef);
+
     if (!defined $id_domain) {
         return $self->can_do("change_settings");
     }
@@ -893,7 +949,10 @@ Unlinke change_settings that any user is granted to his own machines by default.
 
 =cut
 
-sub can_manage_machine($self, $domain) {
+sub can_manage_machine {
+    my $self = shift;
+    my $domain = shift;
+
     return 1 if $self->is_admin;
 
     $domain = Ravada::Front::Domain->open($domain)  if !ref $domain;
@@ -904,7 +963,7 @@ sub can_manage_machine($self, $domain) {
 
     return 1 if $self->can_remove_clone_all
         && $domain->id_base;
-    
+
     return 1 if $self->can_clone_all;
 
     return 1 if $self->can_remove && $domain->id_owner == $self->id;
@@ -930,7 +989,10 @@ Arguments:
 
 =cut
 
-sub can_remove_clones($self, $id_domain=undef) {
+sub can_remove_clones {
+    my $self = shift;
+    my $id_domain = (shift or undef);
+
 
     return $self->can_do('remove_clones') if !$id_domain;
 
@@ -960,7 +1022,10 @@ Arguments:
 
 =cut
 
-sub can_remove_machine($self, $domain) {
+sub can_remove_machine {
+    my $self = shift;
+    my $domain = shift;
+
     return 1 if $self->can_remove_all();
     #return 0 if !$self->can_remove();
 
@@ -988,7 +1053,10 @@ Arguments:
 
 =cut
 
-sub can_shutdown_machine($self, $domain) {
+sub can_shutdown_machine {
+    my $self = shift;
+    my $domain = shift;
+
 
     return 1 if $self->can_shutdown_all();
 
@@ -1010,7 +1078,8 @@ Returns a list of permissions granted to the user in a hash
 
 =cut
 
-sub grants($self) {
+sub grants {
+    my $self = shift;
     $self->_load_grants();
     return () if !$self->{_grant};
     return %{$self->{_grant}};
@@ -1023,7 +1092,9 @@ LDAP external authentication
 
 =cut
 
-sub ldap_entry($self) {
+sub ldap_entry {
+    my $self = shift;
+
     confess "Error: User ".$self->name." is not in LDAP external auth"
         if !$self->external_auth || $self->external_auth ne 'ldap';
 
@@ -1035,7 +1106,10 @@ sub ldap_entry($self) {
     return $self->{_ldap_entry};
 }
 
-sub AUTOLOAD($self, $domain=undef) {
+sub AUTOLOAD {
+    my $self = shift;
+    my $domain = (shift or undef);
+
 
     my $name = $AUTOLOAD;
     $name =~ s/.*://;

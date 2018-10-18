@@ -29,7 +29,7 @@ sub test_new_domain {
                                         ,vm => $vm->type
                                         ,id_owner => $USER->id
                                         ,memory => 1.5*1024*1024
-            ) 
+            )
     };
     if ($freemem < 1 ) {
         ok($@,"Expecting failed because we ran out of free RAM");
@@ -46,9 +46,9 @@ sub test_new_domain {
     }
     ok(!$@,"Expected start domain with $freemem MB Free $@");
 
-    
+
     #Ckeck free memory
-    
+
     #virsh setmaxmem $name xG --config
     #virsh setmem $name xG --config
 

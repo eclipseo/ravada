@@ -21,8 +21,8 @@ use Sys::Virt::Domain;
 use Sys::Virt;
 use XML::LibXML;
 
-no warnings "experimental::signatures";
-use feature qw(signatures);
+no if $] >= 5.020000, warnings => "experimental::signatures";
+use if $] >= 5.020000, feature => qw(signatures);
 
 extends 'Ravada::Front::Domain::KVM';
 with 'Ravada::Domain';
@@ -123,7 +123,10 @@ sub list_disks {
     return @disks;
 }
 
-sub xml_description($self, $inactive=0) {
+sub xml_description {
+    my $self = shift;
+    my $inactive = (shift or 0);
+
     return $self->_data_extra('xml')    if !$self->domain && $self->is_known;
 
     confess "ERROR: KVM domain not available"   if !$self->domain;
@@ -146,7 +149,8 @@ sub xml_description($self, $inactive=0) {
     return $xml;
 }
 
-sub xml_description_inactive($self) {
+sub xml_description_inactive {
+    my $self = shift;
     return $self->xml_description(1);
 }
 
@@ -243,7 +247,7 @@ sub remove {
 
 #    warn "WARNING: Problem removing ".$self->file_base_img." for ".$self->name
 #            ." , I will try again later : $@" if $@;
-    
+
     $self->_post_remove_base_domain() if $self->is_base();
 
     eval { $self->domain->undefine()    if $self->domain };
@@ -513,7 +517,8 @@ sub _post_remove_base_domain {
 }
 
 
-sub post_resume_aux($self) {
+sub post_resume_aux {
+    my $self = shift;
     my $time = time();
     eval {
         $self->domain->set_time($time, 0, 0);
@@ -571,7 +576,8 @@ Returns wether the domain has a persistent configuration file
 
 =cut
 
-sub is_persistent($self) {
+sub is_persistent {
+    my $self = shift;
     return $self->domain->is_persistent;
 }
 
@@ -616,8 +622,8 @@ sub _pre_shutdown_domain {
 
     my ($state, $reason) = $self->domain->get_state();
 
-    if ($state == Sys::Virt::Domain::STATE_PMSUSPENDED_UNKNOWN 
-         || $state == Sys::Virt::Domain::STATE_PMSUSPENDED_DISK_UNKNOWN 
+    if ($state == Sys::Virt::Domain::STATE_PMSUSPENDED_UNKNOWN
+         || $state == Sys::Virt::Domain::STATE_PMSUSPENDED_DISK_UNKNOWN
          || $state == Sys::Virt::Domain::STATE_PMSUSPENDED) {
         $self->domain->pm_wakeup();
         for ( 1 .. 10 ) {
@@ -1435,7 +1441,11 @@ sub _set_driver_generic {
 }
 
 
-sub _set_driver_generic_simple($self, $xml_path, $value_str) {
+sub _set_driver_generic_simple {
+    my $self = shift;
+    my $xml_path= shift;
+    my $value_str = shift;
+
     my %value = _text_to_hash($value_str);
 
     my $doc = XML::LibXML->load_xml(string => $self->domain->get_xml_description);
@@ -1469,7 +1479,10 @@ sub _set_driver_generic_simple($self, $xml_path, $value_str) {
 
 }
 
-sub _add_driver($self, $xml_path, $attributes=undef) {
+sub _add_driver {
+    my $self = shift;
+    my $xml_path= shift;
+    my $attributes = (shift or undef);
 
     my $doc = XML::LibXML->load_xml(string => $self->domain->get_xml_description);
 
@@ -1565,7 +1578,11 @@ sub _set_driver_sound {
 }
 
 
-sub set_controller($self, $name, $numero) {
+sub set_controller {
+    my $self = shift;
+    my $name= shift;
+    my $numero = shift;
+
     my $sub = $SET_CONTROLLER_SUB{$name};
     die "I can't get controller $name for domain ".$self->name
         if !$sub;
@@ -1575,10 +1592,14 @@ sub set_controller($self, $name, $numero) {
     return $ret;
 }
 #The only '$tipo' suported right now is 'spicevmc'
-sub _set_controller_usb($self,$numero, $tipo="spicevmc") {
+sub _set_controller_usb {
+    my $self = shift;
+    my $numero= shift;
+    my $tipo = (shift or "spicevmc");
+
     my $doc = XML::LibXML->load_xml(string => $self->xml_description_inactive);
     my ($devices) = $doc->findnodes('/domain/devices');
-    
+
     my $count = 0;
     for my $controller ($devices->findnodes('redirdev')) {
         $count=$count+1;
@@ -1586,24 +1607,28 @@ sub _set_controller_usb($self,$numero, $tipo="spicevmc") {
             $devices->removeChild($controller);
         }
     }
-    
+
     if ( $numero > $count ) {
         my $missing = $numero-$count-1;
-        
+
         for my $i (0..$missing) {
             my $controller = $devices->addNewChild(undef,"redirdev");
             $controller->setAttribute(bus => 'usb');
             $controller->setAttribute(type => $tipo );
-        } 
+        }
     }
     $self->_vm->connect if !$self->_vm->vm;
     my $new_domain = $self->_vm->vm->define_domain($doc->toString);
     $self->domain($new_domain);
 }
 
-sub remove_controller($self, $name, $index=0) {
+sub remove_controller {
+    my $self = shift;
+    my $name= shift;
+    my $index = (shift or 0);
+
     my $sub = $REMOVE_CONTROLLER_SUB{$name};
-    
+
     die "I can't get controller $name for domain ".$self->name
         if !$sub;
 
@@ -1612,7 +1637,10 @@ sub remove_controller($self, $name, $index=0) {
     return $ret;
 }
 
-sub _remove_controller_usb($self, $index) {
+sub _remove_controller_usb {
+    my $self = shift;
+    my $index= shift;
+
     my $doc = XML::LibXML->load_xml(string => $self->xml_description_inactive);
     my ($devices) = $doc->findnodes('/domain/devices');
     my $ind=0;
@@ -1650,7 +1678,8 @@ sub pre_remove {
         if $self->domain && $self->domain->has_managed_save_image;
 }
 
-sub is_removed($self) {
+sub is_removed {
+    my $self = shift;
     my $is_removed = 0;
 
     eval {
@@ -1665,12 +1694,17 @@ sub is_removed($self) {
     return $is_removed;
 }
 
-sub internal_id($self) {
+sub internal_id {
+    my $self = shift;
     confess "ERROR: Missing internal domain"    if !$self->domain;
     return $self->domain->get_id();
 }
 
-sub autostart($self, $value=undef, $user=undef) {
+sub autostart {
+    my $self = shift;
+    my $value = (shift or undef);
+    my $user = (shift or undef);
+
     $self->domain->set_autostart($value) if defined $value;
     return $self->domain->get_autostart();
 }

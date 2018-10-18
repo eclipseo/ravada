@@ -11,8 +11,8 @@ use IPC::Run3 qw(run3);
 use lib 't/lib';
 use Test::Ravada;
 
-no warnings "experimental::signatures";
-use feature qw(signatures);
+no if $] >= 5.020000, warnings => "experimental::signatures";
+use if $] >= 5.020000, feature => qw(signatures);
 
 use_ok('Ravada') or BAIL_OUT;
 
@@ -111,7 +111,9 @@ sub install_base {
     return $name;
 }
 
-sub _wait_base_installed($vm_name) {
+sub _wait_base_installed {
+    my $vm_name = shift;
+
     my $name = $DOMAIN_INSTALLING{$vm_name} or die "No $vm_name domain installing";
 
     diag("[$vm_name] waiting for $name");
@@ -131,7 +133,10 @@ sub _wait_base_installed($vm_name) {
     return $name;
 }
 
-sub test_create_clones($vm_name, $domain_name, $n_clones=undef) {
+sub test_create_clones {
+    my $vm_name = shift;
+    my $domain_name = shift;
+    my $n_clones = (shift or undef);
 
     diag("[$vm_name] create clones from $domain_name");
     my $vm = rvd_back->search_vm($vm_name);
@@ -186,7 +191,9 @@ sub test_create_clones($vm_name, $domain_name, $n_clones=undef) {
     }
 }
 
-sub random_request($vm) {
+sub random_request {
+    my $vm = shift;
+
     my @domains = $vm->list_domains();
 
     my $domain = $domains[rand($#domains)];
@@ -228,7 +235,12 @@ sub random_request($vm) {
     }
 }
 
-sub _fill_vm($field, $attrib, $vm, $req_name) {
+sub _fill_vm {
+    my $field = shift;
+    my $attrib = shift;
+    my $vm = shift;
+    my $req_name = shift;
+
     if (defined $field->{$attrib} && $field->{$attrib} == 2 && rand(4)<2 ) {
         delete $field->{$attrib};
         return;
@@ -238,7 +250,12 @@ sub _fill_vm($field, $attrib, $vm, $req_name) {
 
 }
 
-sub _fill_name($field, $attrib, $vm, $req_name) {
+sub _fill_name {
+    my $field = shift;
+    my $attrib = shift;
+    my $vm = shift;
+    my $req_name = shift;
+
     if ($req_name =~ /_hardware$/) {
         _fill_id_domain($field, 'id_domain', $vm, $req_name) if !$field->{id_domain};
         my $domain = Ravada::Domain->open($field->{id_domain});
@@ -250,23 +267,45 @@ sub _fill_name($field, $attrib, $vm, $req_name) {
     }
 }
 
-sub _fill_remote_ip($field, $attrib, $vm, $req_name) {
+sub _fill_remote_ip {
+    my $field = shift;
+    my $attrib = shift;
+    my $vm = shift;
+    my $req_name = shift;
+
     $field->{$attrib} = '192.168.1.'.int(rand(254)+1);
 }
 
-sub _fill_id_vm($field, $attrib, $vm, $req_name) {
+sub _fill_id_vm {
+    my $field = shift;
+    my $attrib = shift;
+    my $vm = shift;
+    my $req_name = shift;
+
     $field->{$attrib} = $vm->id;
 }
 
-sub _fill_at($field, $attrib, $vm, $req_name) {
+sub _fill_at {
+    my $field = shift;
+    my $attrib = shift;
+    my $vm = shift;
+    my $req_name = shift;
+
     $field->{$attrib} = time + int(rand(30));
 }
 
-sub _fill_filename($field, $attrib, $vm, $req_name) {
+sub _fill_filename {
+    my $field = shift;
+    my $attrib = shift;
+    my $vm = shift;
+    my $req_name = shift;
+
     $field->{$attrib} = "/var/tmp/$$".int(rand(100)).".txt";
 }
 
-sub _select_domains(@list_args) {
+sub _select_domains {
+    my @list_args = @_;
+
     my $domains0 = rvd_front->list_domains( @list_args );
     my @domains;
     for (@$domains0) {
@@ -274,7 +313,9 @@ sub _select_domains(@list_args) {
     }
     return \@domains;
 }
-sub _select_bases(@list_args) {
+sub _select_bases {
+    my @list_args = @_;
+
     my $domains0 = rvd_front->list_bases( @list_args );
     my @domains;
     for (@$domains0) {
@@ -283,7 +324,12 @@ sub _select_bases(@list_args) {
     return \@domains;
 }
 
-sub _fill_id_domain($field, $attrib, $vm, $req_name) {
+sub _fill_id_domain {
+    my $field = shift;
+    my $attrib = shift;
+    my $vm = shift;
+    my $req_name = shift;
+
     my $domains = _select_domains( id_vm => $vm->id );
     my $dom;
     for ( 1 .. 100 ) {
@@ -295,7 +341,9 @@ sub _fill_id_domain($field, $attrib, $vm, $req_name) {
     $field->{$attrib} = $dom->{id};
 }
 
-sub _domain_requested_remove($id_domain) {
+sub _domain_requested_remove {
+    my $id_domain = shift;
+
     my $domain = Ravada::Domain->open($id_domain);
     for my $req ($domain->list_all_requests) {
         return if $req->command eq 'remove_domain';
@@ -303,7 +351,12 @@ sub _domain_requested_remove($id_domain) {
     return 0;
 }
 
-sub _fill_uid($field, $attrib, $vm, $req_name) {
+sub _fill_uid {
+    my $field = shift;
+    my $attrib = shift;
+    my $vm = shift;
+    my $req_name = shift;
+
     my $users = rvd_front->list_users();
     if (rand(5)<3 && exists $field->{id_domain}) {
         _fill_id_domain($field,'id_domain', $vm, $req_name);
@@ -320,29 +373,59 @@ sub _fill_uid($field, $attrib, $vm, $req_name) {
     }
 }
 
-sub _fill_memory($field, $attrib, $vm, $req_name) {
+sub _fill_memory {
+    my $field = shift;
+    my $attrib = shift;
+    my $vm = shift;
+    my $req_name = shift;
+
     $field->{$attrib} = int(rand(10)+1)* 1024 * 1024;
 }
 
-sub _fill_id_iso($field, $attrib, $vm, $req_name) {
+sub _fill_id_iso {
+    my $field = shift;
+    my $attrib = shift;
+    my $vm = shift;
+    my $req_name = shift;
+
     my $isos = rvd_front->list_iso_images();
     $field->{$attrib} = $isos->[int(rand(@$isos))]->{id};
 }
 
-sub _fill_network($field, $attrib, $vm, $req_name) {
+sub _fill_network {
+    my $field = shift;
+    my $attrib = shift;
+    my $vm = shift;
+    my $req_name = shift;
+
     my @networks = $vm->list_networks();
     $field->{$attrib} = $networks[int(rand(scalar @networks))];
 }
 
-sub _fill_boolean($field, $attrib, $vm, $req_name) {
+sub _fill_boolean {
+    my $field = shift;
+    my $attrib = shift;
+    my $vm = shift;
+    my $req_name = shift;
+
     $field->{$attrib} = int(rand(2));
 }
 
-sub _fill_timeout($field, $attrib, $vm, $req_name) {
+sub _fill_timeout {
+    my $field = shift;
+    my $attrib = shift;
+    my $vm = shift;
+    my $req_name = shift;
+
     $field->{$attrib} = int(rand(120));
 }
 
-sub _fill_id_option($field, $attrib, $vm, $req_name) {
+sub _fill_id_option {
+    my $field = shift;
+    my $attrib = shift;
+    my $vm = shift;
+    my $req_name = shift;
+
     _fill_id_domain($field,'id_domain', $vm, $req_name);
 
     my $domain = Ravada::Domain->open($field->{id_domain});
@@ -367,7 +450,12 @@ sub _fill_id_option($field, $attrib, $vm, $req_name) {
     $field->{$attrib} = $option->{id};
 }
 
-sub _fill_id_template($field, $attrib, $vm, $req_name) {
+sub _fill_id_template {
+    my $field = shift;
+    my $attrib = shift;
+    my $vm = shift;
+    my $req_name = shift;
+
     if ( $vm->type eq 'LXC' ) {
         confess "TODO id_template for LXC";
     } else {
@@ -375,17 +463,32 @@ sub _fill_id_template($field, $attrib, $vm, $req_name) {
     }
 }
 
-sub _fill_iso_file($field, $attrib, $vm, $req_name) {
+sub _fill_iso_file {
+    my $field = shift;
+    my $attrib = shift;
+    my $vm = shift;
+    my $req_name = shift;
+
     my @iso = $vm->search_volume(qr(\.iso));
     $field->{$attrib} = $iso[int(rand(scalar @iso))];
 }
 
-sub _fill_id_base($field, $attrib, $vm, $req_name) {
+sub _fill_id_base {
+    my $field = shift;
+    my $attrib = shift;
+    my $vm = shift;
+    my $req_name = shift;
+
     my $bases = _select_bases( id_vm => $vm->id );
     $field->{$attrib} = $bases->[int(rand($#$bases))]->{id};
 }
 
-sub _fill_id_clone($field, $attrib, $vm, $req_name) {
+sub _fill_id_clone {
+    my $field = shift;
+    my $attrib = shift;
+    my $vm = shift;
+    my $req_name = shift;
+
     my $domains = _select_domains(id_vm => $vm->id);
     confess "No domains id_vm => ".$vm->id  if !scalar@$domains;
     my @clones;
@@ -396,15 +499,26 @@ sub _fill_id_clone($field, $attrib, $vm, $req_name) {
     $field->{$attrib} = $clones[int(rand($#clones))]->{id};
 }
 
-sub _fill_number($field, $attrib, $vm, $req_name) {
+sub _fill_number {
+    my $field = shift;
+    my $attrib = shift;
+    my $vm = shift;
+    my $req_name = shift;
+
     $field->{$attrib} = int(rand(10));
 }
 
-sub _fill_ram($field, $attrib, $vm, $req_name) {
+sub _fill_ram {
+    my $field = shift;
+    my $attrib = shift;
+    my $vm = shift;
+    my $req_name = shift;
+
     $field->{$attrib} = int(rand(4 * 1024 * 1024));
 }
 
-sub random_request_compliant($vm_name) {
+sub random_request_compliant {
+    my $vm_name = shift;
 
     my $vm = rvd_back->search_vm($vm_name);
     my @requests = keys %Ravada::Request::VALID_ARG;
@@ -418,7 +532,11 @@ sub random_request_compliant($vm_name) {
     return new_request($req_name, \%field, $vm);
 }
 
-sub new_request($req_name, $field, $vm) {
+sub new_request {
+    my $req_name = shift;
+    my $field = shift;
+    my $vm = shift;
+
     my %fill_attrib = (
         vm => \&_fill_vm
         ,at => \&_fill_at
@@ -457,7 +575,9 @@ sub new_request($req_name, $field, $vm) {
     return Ravada::Request->$req_name(%$field);
 }
 
-sub test_requests($vm_name) {
+sub test_requests {
+    my $vm_name = shift;
+
     my $vm = rvd_back->search_vm($vm_name);
     my @requests = sort keys %Ravada::Request::VALID_ARG;
     for my $req_name (@requests) {
@@ -499,7 +619,11 @@ sub test_requests($vm_name) {
     }
 }
 
-sub clean_request($req_name,  $vm_name, $field) {
+sub clean_request {
+    my $req_name = shift;
+    my $vm_name = shift;
+    my $field = shift;
+
     $vm_name = 'KVM' if $vm_name eq 'qemu';
     my $vm = rvd_back->search_vm($vm_name) or confess "Error, unknown vm called '$vm_name'";
     if ($req_name eq 'start_domain') {
@@ -555,7 +679,9 @@ sub clean_request($req_name,  $vm_name, $field) {
     $field->{vm}='KVM' if exists $field->{vm} && $field->{vm} =~ /qemu/i;
 }
 
-sub test_random_requests($vm_name0, $count=10) {
+sub test_random_requests {
+    my $vm_name0 = shift;
+    my $count = (shift or 10);
 
     my @reqs;
     for ( 1 .. $count ){
@@ -587,7 +713,8 @@ sub new_clone_name {
     }
 }
 
-sub test_restart($vm_name) {
+sub test_restart {
+    my $vm_name = shift;
 
     my $vm = rvd_back->search_vm($vm_name);
 
@@ -713,7 +840,10 @@ sub test_make_clones_base {
     }
 }
 
-sub _wait_requests($reqs, $buggy = undef) {
+sub _wait_requests {
+    my $reqs = shift;
+    my $buggy = (shift or undef);
+
     return if !$reqs || !scalar @$reqs;
     diag("Waiting for ".scalar(@$reqs)." requests");
     for ( 1 .. 1000 ) {
@@ -742,7 +872,10 @@ sub test_iptables_jump {
         or exit;
 }
 
-sub _all_reqs_done($reqs, $buggy) {
+sub _all_reqs_done {
+    my $reqs = shift;
+    my $buggy = shift;
+
     for my $cont ( 0 .. scalar @$reqs) {
         my $r = $reqs->[$cont] or next;
         next if !$r->id;
@@ -790,7 +923,7 @@ sub _all_reqs_done($reqs, $buggy) {
     return 1;
 }
 
-sub _shutdown_random_domain() {
+sub _shutdown_random_domain {
     my $domains = rvd_front->list_domains(status => 'active');
     my $active = $domains->[int rand($#$domains)];
     return if !$active;
@@ -816,7 +949,9 @@ sub _ping_backend {
     return 0;
 }
 
-sub clean_clones($domain_name, $vm_name) {
+sub clean_clones {
+    my $domain_name = shift;
+    my $vm_name = shift;
 
     my $domain = rvd_back->search_domain($domain_name) or return;
 
@@ -833,7 +968,9 @@ sub clean_clones($domain_name, $vm_name) {
     _wait_requests(\@reqs);
 }
 
-sub test_remove_base($domain_name, $vm_name) {
+sub test_remove_base {
+    my $domain_name = shift;
+    my $vm_name = shift;
 
     my $domain = rvd_back->search_domain($domain_name) or return;
     my $vm = rvd_back->search_vm($vm_name);
@@ -861,7 +998,8 @@ sub clean_clone_requests {
     $sth->finish;
 }
 
-sub clean_leftovers($vm_name) {
+sub clean_leftovers {
+    my $vm_name = shift;
 
     clean_clone_requests();
 

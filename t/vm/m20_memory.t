@@ -18,9 +18,9 @@ sub test_change_max_memory {
 	my $memoryGB = shift;
 	my $use_mem_GB = shift;
 	my $factor = 1024*1024;#kb<-Gb
-	
+
 	my $domain = create_domain($vm->type);
-	
+
 	eval {
 		$domain->set_max_mem($memoryGB*$factor)
 	};
@@ -30,14 +30,14 @@ sub test_change_max_memory {
 		$info = $domain->get_info()
 	};
 	ok($info->{max_mem}==$memoryGB*$factor, 'Max Memory changed!');
-	
+
 	$domain->start(user_admin) if !$domain->is_active;
-	
+
 	eval {
 		$domain->set_memory($use_mem_GB*$factor)
 	};
 	is($@,'');
-	
+
 	eval {
 		$info = $domain->get_info()
 	};
@@ -48,20 +48,20 @@ sub test_change_max_memory {
 
 sub test_change_memory_base {
 	my $vm = shift;
-	
+
 	my $domain = create_domain($vm->type);
 	$domain->shutdown_now(user_admin)    if $domain->is_active();
 
     eval { $domain->prepare_base( user_admin ) };
     ok(!$@, $@);
     ok($domain->is_base);
-    
+
     eval { $domain->set_max_mem(1024*1024*3) };
     ok(!$@,$@);
-     
+
     my $doc = XML::LibXML->load_xml(string => $domain->xml_description);
     ok($doc,$doc);
-    
+
     $domain->remove(user_admin);
 }
 

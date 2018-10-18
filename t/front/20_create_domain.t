@@ -13,7 +13,7 @@ my $CONFIG_FILE = 't/etc/ravada.conf';
 
 my @rvd_args = (
        config => $CONFIG_FILE
-   ,connector => connector 
+   ,connector => connector
 );
 
 my $RVD_BACK  = rvd_back( );
@@ -119,7 +119,7 @@ for my $vm_name ('Void','KVM','LXC') {
     }
 
     my $name = new_domain_name();
-    my $req = $RVD_FRONT->create_domain( name => $name 
+    my $req = $RVD_FRONT->create_domain( name => $name
         , create_args($vm_name)
         , vm => $vm_name
     );
@@ -135,7 +135,7 @@ for my $vm_name ('Void','KVM','LXC') {
     my $domain  = $RVD_FRONT->search_domain($name);
 
     ok($domain,"Domain $name not found") or exit;
-    ok($domain && $domain->name && 
+    ok($domain && $domain->name &&
         $domain->name eq $name,"[$vm_name] Expecting domain name $name, got "
         .($domain->name or '<UNDEF>'));
 

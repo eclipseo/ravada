@@ -38,7 +38,7 @@ sub test_add_hardware_request {
 	my $hardware = shift;
 
     $domain->shutdown_now(user_admin)   if $domain->is_active;
-	
+
     my @list_hardware1 = $domain->get_controller($hardware);
 	my $numero = scalar(@list_hardware1)+1;
 	my $req;
@@ -149,7 +149,7 @@ for my $vm_name ( qw(Void KVM)) {
 	    next;
 	}
 	my $name = new_domain_name();
-	
+
 	my $domain_b = $vm->create_domain(
         name => $name
         ,active => 0

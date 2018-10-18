@@ -70,14 +70,19 @@ sub _create_users() {
     return $data;
 }
 
-sub _refresh_users($data) {
+sub _refresh_users {
+    my $data = shift;
+
     for my $key (keys %$data) {
         delete $data->{$key}->{user}->{_ldap_entry};
         delete $data->{$key}->{user}->{_load_allowed};
     }
 }
 
-sub _do_clones($data, $base, $do_clones) {
+sub _do_clones {
+    my $data = shift;
+    my $base = shift;
+    my $do_clones = shift;
 
     return if !$do_clones;
 
@@ -93,7 +98,10 @@ sub _do_clones($data, $base, $do_clones) {
     return ($clone_student, $clone_teacher);
 }
 
-sub test_access_by_attribute_deny($vm, $do_clones=0) {
+sub test_access_by_attribute_deny {
+    my $vm = shift;
+    my $do_clones = (shift or 0);
+    
     my $base = create_domain($vm->type);
     $base->prepare_base(user_admin);
     $base->is_public(1);
@@ -128,7 +136,10 @@ sub test_access_by_attribute_deny($vm, $do_clones=0) {
     _remove_users($data);
 }
 
-sub test_access_by_attribute_several($vm, $do_clones=0) {
+sub test_access_by_attribute_several {
+    my $vm = shift;
+    my $do_clones = (shift or 0);
+
     my $base = create_domain($vm->type);
     $base->prepare_base(user_admin);
     $base->is_public(1);
@@ -165,7 +176,9 @@ sub test_access_by_attribute_several($vm, $do_clones=0) {
     _remove_bases($base);
     _remove_users($data);
 }
-sub test_access_by_attribute_several2($vm) {
+sub test_access_by_attribute_several2 {
+    my $vm = shift;
+
     my $base = create_domain($vm->type);
     $base->prepare_base(user_admin);
     $base->is_public(1);
@@ -189,7 +202,10 @@ sub test_access_by_attribute_several2($vm) {
     _remove_users($data);
 }
 
-sub test_access_by_attribute_move($vm, $do_clones=0) {
+sub test_access_by_attribute_move {
+    my $vm = shift;
+    my $do_clones = (shift or 0);
+
     my $base = create_domain($vm->type);
     $base->prepare_base(user_admin);
     $base->is_public(1);
@@ -234,7 +250,9 @@ sub test_access_by_attribute_move($vm, $do_clones=0) {
     _remove_users($data);
 }
 
-sub test_access_by_attribute_move_removed($vm) {
+sub test_access_by_attribute_move_removed {
+    my $vm = shift;
+
     my $base = create_domain($vm->type);
     $base->prepare_base(user_admin);
     $base->is_public(1);
@@ -260,7 +278,9 @@ sub test_access_by_attribute_move_removed($vm) {
 }
 
 
-sub test_2_checks($vm) {
+sub test_2_checks {
+    my $vm = shift;
+
     my $data = _create_users();
 
     my $base = create_domain($vm->type);
@@ -288,7 +308,9 @@ sub test_2_checks($vm) {
     _remove_users($data);
 }
 
-sub test_access_by_attribute($vm, $do_clones=0) {
+sub test_access_by_attribute {
+    my $vm = shift;
+    my $do_clones = (shift or 0);
 
     my $data = _create_users();
 
@@ -338,7 +360,9 @@ sub test_access_by_attribute($vm, $do_clones=0) {
     _remove_users($data);
 }
 
-sub _create_bases($vm, $n=1) {
+sub _create_bases {
+    my $vm = shift;
+    my $n = (shift or 0);
 
     my @bases;
     for (1 .. $n ) {
@@ -353,7 +377,9 @@ sub _create_bases($vm, $n=1) {
 
 }
 
-sub _remove_bases(@bases) {
+sub _remove_bases {
+    my @bases = @_;
+    
     for my $base (@bases) {
         for my $clone_data ($base->clones) {
             my $clone = Ravada::Domain->open($clone_data->{id});
@@ -375,7 +401,9 @@ sub _remove_bases(@bases) {
     }
 }
 
-sub _remove_users($data) {
+sub _remove_users {
+    my $data = shift;
+
     for my $key (keys %$data) {
         my $entry = $data->{$key};
 
@@ -389,7 +417,9 @@ sub _remove_users($data) {
     }
 }
 
-sub test_access_by_attribute_2bases($vm, $do_clones=0) {
+sub test_access_by_attribute_2bases {
+    my $vm = shift;
+    my $do_clones = (shift or 0);
 
     my $data = _create_users();
 

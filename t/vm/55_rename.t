@@ -50,7 +50,7 @@ sub test_rename_domain {
         my $rvd_back = rvd_back();
         my $vm = $rvd_back->search_vm($vm_name);
         my $domain = $vm->search_domain($domain_name);
-        ok($domain,"[$vm_name] Expecting found $domain_name") 
+        ok($domain,"[$vm_name] Expecting found $domain_name")
             or return;
 
         eval { $domain->rename(name => $new_domain_name, user => $USER) };
@@ -62,7 +62,7 @@ sub test_rename_domain {
     ok(!$domain0,"[$vm_name] Expecting not found $domain_name");
 
     my $domain1 = $vm->search_domain($new_domain_name);
-    ok($domain1,"[$vm_name] Expecting renamed domain $new_domain_name") 
+    ok($domain1,"[$vm_name] Expecting renamed domain $new_domain_name")
         or return;
 
     return $new_domain_name;
@@ -188,7 +188,7 @@ for my $vm_name (qw( Void KVM )) {
         $vm_ok = 1 if $vm;
     };
     diag($@) if $@;
-    
+
     SKIP: {
         my $msg = "SKIPPED test: No $vm_name VM found ";
         if ($vm_ok && $vm_name =~ /kvm/i && $>) {
@@ -200,23 +200,23 @@ for my $vm_name (qw( Void KVM )) {
         skip $msg,10    if !$vm_ok;
 
         diag("Testing rename domains with $vm_name");
-    
+
         test_rename_twice($vm_name);
 
         my $domain_name = test_create_domain($vm_name);
         test_rename_domain($vm_name, $domain_name)  or next;
         test_create_domain($vm_name, $domain_name);
-    
+
         $domain_name = test_create_domain($vm_name);
         test_req_rename_domain($vm_name, $domain_name) or next;
         test_create_domain($vm_name, $domain_name);
-    
+
         test_rename_clone($vm_name);
         test_req_rename_clone($vm_name);
 
     };
 }
-    
+
 remove_old_domains();
 remove_old_disks();
 

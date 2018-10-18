@@ -94,7 +94,7 @@ sub test_req_clone {
     );
     ok($req);
     ok($req->status);
-    ok(defined $req->args->{name} 
+    ok(defined $req->args->{name}
         && $req->args->{name} eq $name
             ,"Expecting args->{name} eq $name "
              ." ,got '".($req->args->{name} or '<UNDEF>')."'");
@@ -124,7 +124,7 @@ sub test_req_create_domain_iso {
     my $name = new_domain_name();
 
     diag("requesting create domain $name");
-    my $req = Ravada::Request->create_domain( 
+    my $req = Ravada::Request->create_domain(
             name => $name
          ,id_iso => search_id_iso('alpine')
        ,id_owner => $USER->id
@@ -132,7 +132,7 @@ sub test_req_create_domain_iso {
     );
     ok($req);
     ok($req->status);
-    ok(defined $req->args->{name} 
+    ok(defined $req->args->{name}
         && $req->args->{name} eq $name
             ,"Expecting args->{name} eq $name "
              ." ,got '".($req->args->{name} or '<UNDEF>')."'");
@@ -162,7 +162,7 @@ sub test_force_kvm {
     );
     ok($req);
     ok($req->status);
-    ok(defined $req->args->{name} 
+    ok(defined $req->args->{name}
         && $req->args->{name} eq $name
             ,"Expecting args->{name} eq $name "
              ." ,got '".($req->args->{name} or '<UNDEF>')."'");

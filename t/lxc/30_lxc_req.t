@@ -36,7 +36,7 @@ sub remove_old {
 sub test_new_req {
     my $name = "${NAME}_".$CONT++;
     my $req;
-#    eval { 
+#    eval {
         $req = Ravada::Request->create_domain(
             name => $name
             ,id_template => 1

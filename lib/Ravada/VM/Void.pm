@@ -121,7 +121,7 @@ sub search_domain {
     for my $domain_vm ( $self->list_domains ) {
         next if $domain_vm->name ne $name;
 
-        my $domain = Ravada::Domain::Void->new( 
+        my $domain = Ravada::Domain::Void->new(
             domain => $name
             ,readonly => $self->readonly
                  ,_vm => $self
